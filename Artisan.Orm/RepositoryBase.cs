@@ -766,14 +766,26 @@ namespace Artisan.Orm
 	
 		#endregion
 
-		public static void AddParams(SqlCommand cmd, dynamic parameters)
+		/// <summary>
+		/// Adds parameters to <paramref name="cmd"/> by enumerating public properties of
+		/// <paramref name="parameters"/> (typically an anonymous type, e.g. <c>new { Id = 1, Name = "Foo" }</c>).
+		/// Each property becomes a parameter named after the property, with the property's value.
+		/// </summary>
+		/// <param name="cmd">The command to add parameters to.</param>
+		/// <param name="parameters">
+		/// An object whose public properties describe the parameters to add.
+		/// Must not be <c>null</c>.
+		/// </param>
+		public static void AddParams(SqlCommand cmd, object parameters)
 		{
+			if (parameters == null)
+				throw new ArgumentNullException(nameof(parameters));
+
 			var dict = new Dictionary<string, object>();
 
 			foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(parameters))
 			{
-				object obj = descriptor.GetValue(parameters);
-				dict.Add(descriptor.Name, obj);
+				dict.Add(descriptor.Name, descriptor.GetValue(parameters));
 			}
 
 			cmd.AddParams(dict);
