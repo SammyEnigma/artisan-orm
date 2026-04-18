@@ -109,13 +109,10 @@ namespace Artisan.Orm
 			if (typeof(T).IsSimpleType())
 				return cmd.ReadToValue<T>();
 
-			var key = SqlDataReaderExtensions.GetAutoCreateObjectFuncKey<T>(cmd.CommandText);
-			var autoMappingFunc = MappingManager.GetAutoCreateObjectFunc<T>(key);
-
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleRow);
 
 			using var dr = cmd.ExecuteReader(readerFlags);
-			return dr.Read() ? dr.CreateObject(autoMappingFunc, key) : default;
+			return dr.Read() ? dr.CreateObject<T>() : default;
 		}
 
 		public static dynamic ReadDynamic(this SqlCommand cmd)
@@ -243,19 +240,16 @@ namespace Artisan.Orm
 			return cmd.ReadDynamicList(null);
 		}
 
-		public static IList<T> ReadAsList<T>(this SqlCommand cmd, IList<T> list) 
+		public static IList<T> ReadAsList<T>(this SqlCommand cmd, IList<T> list)
 		{
 			if (typeof(T).IsSimpleType())
 				return cmd.ReadToListOfValues<T>(list);
 
-			var key = SqlDataReaderExtensions.GetAutoCreateObjectFuncKey<T>(cmd.CommandText);
-			var autoMappingFunc = MappingManager.GetAutoCreateObjectFunc<T>(key);
-
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleResult);
 
-				using (var dr = cmd.ExecuteReader(readerFlags))
+			using (var dr = cmd.ExecuteReader(readerFlags))
 			{
-				list = dr.ReadAsList(list, autoMappingFunc, key);
+				list = dr.ReadAsList<T>(list, getNextResult: false);
 			}
 
 			return list;

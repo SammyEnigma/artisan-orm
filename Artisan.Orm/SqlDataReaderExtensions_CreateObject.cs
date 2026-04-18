@@ -4,6 +4,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using Microsoft.Data.SqlClient;
 
 namespace Artisan.Orm
@@ -53,22 +54,26 @@ namespace Artisan.Orm
 
 		#region [ private members ] 
 
-		private static readonly PropertyInfo CommandProperty = typeof(SqlDataReader).GetProperties(BindingFlags.NonPublic | BindingFlags.Instance).First(p => p.Name == "Command");
-	
-		internal static string GetCommandText(this SqlDataReader dr)
-		{
-			var command = (SqlCommand)CommandProperty.GetValue(dr);
-			return command.CommandText;
-		}
-	
+		/// <summary>
+		/// Builds a cache key for an auto-generated mapping function from the
+		/// <i>shape</i> of the reader (field count, field names, field types) and the
+		/// target type <typeparamref name="T"/>. Two queries that yield the same result
+		/// shape share the same compiled mapping function.
+		///
+		/// <para>The key is intentionally not derived from the command text: it used to be,
+		/// which required reflection into the internal <c>SqlDataReader.Command</c>
+		/// property (fragile across Microsoft.Data.SqlClient upgrades and AOT-hostile)
+		/// and caused the cache to grow without bound for ad-hoc SQL.</para>
+		/// </summary>
 		internal static string GetAutoCreateObjectFuncKey<T>(SqlDataReader dr)
 		{
-			return GetAutoCreateObjectFuncKey<T>(dr.GetCommandText());
-		}
-
-		internal static string GetAutoCreateObjectFuncKey<T>(string commandText)
-		{
-			return $"{commandText}+{typeof(T).FullName}";
+			var sb = new StringBuilder(typeof(T).FullName);
+			var count = dr.FieldCount;
+			for (var i = 0; i < count; i++)
+			{
+				sb.Append('|').Append(dr.GetName(i)).Append(':').Append(dr.GetFieldType(i).Name);
+			}
+			return sb.ToString();
 		}
 	
 		private static readonly Dictionary<Type, string> ReaderGetMethodNames = new Dictionary<Type, string>()
@@ -178,7 +183,17 @@ namespace Artisan.Orm
 			}
 
 			if (memberBindings.Count == 0)
-				throw new ArtisanMappingException($"Creation of AutoMapping Func failed. No property-field name matching found for class = '{typeof(T).FullName}' and CommandText = '{dr.GetCommandText()}'");
+			{
+				var columnList = new StringBuilder();
+				for (var i = 0; i < dr.FieldCount; i++)
+				{
+					if (i > 0) columnList.Append(", ");
+					columnList.Append(dr.GetName(i)).Append(':').Append(dr.GetFieldType(i).Name);
+				}
+				throw new ArtisanMappingException(
+					$"Creation of AutoMapping Func failed. None of the reader columns [{columnList}] " +
+					$"matches a public writable property of '{typeof(T).FullName}'.");
+			}
 		
 
 			var ctor = Expression.New(typeof(T));

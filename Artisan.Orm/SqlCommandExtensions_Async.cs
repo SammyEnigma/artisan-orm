@@ -111,13 +111,10 @@ namespace Artisan.Orm
 			if (typeof(T).IsSimpleType())
 				return await cmd.ReadToValueAsync<T>(cancellationToken).ConfigureAwait(false);
 
-			var key = SqlDataReaderExtensions.GetAutoCreateObjectFuncKey<T>(cmd.CommandText);
-			var autoMappingFunc = MappingManager.GetAutoCreateObjectFunc<T>(key);
-
 			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleRow).ConfigureAwait(false);
 
 			using var dr = await cmd.ExecuteReaderAsync(readerFlags, cancellationToken).ConfigureAwait(false);
-			return dr.Read() ? dr.CreateObject(autoMappingFunc, key) : default;
+			return dr.Read() ? dr.CreateObject<T>() : default;
 		}
 
 		#endregion
@@ -218,14 +215,11 @@ namespace Artisan.Orm
 			if (typeof(T).IsSimpleType())
 				return await cmd.ReadToListOfValuesAsync<T>(list).ConfigureAwait(false);
 
-			var key = SqlDataReaderExtensions.GetAutoCreateObjectFuncKey<T>(cmd.CommandText);
-			var autoMappingFunc = MappingManager.GetAutoCreateObjectFunc<T>(key);
-
 			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleResult).ConfigureAwait(false);
 
 			using (var dr = await cmd.ExecuteReaderAsync(readerFlags, cancellationToken).ConfigureAwait(false))
 			{
-				list = dr.ReadAsList(list, autoMappingFunc, key);
+				list = dr.ReadAsList<T>(list, getNextResult: false);
 			}
 
 			return list;
