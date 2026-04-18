@@ -9,8 +9,10 @@ using Microsoft.Data.SqlClient;
 namespace Artisan.Orm
 { 
 
-	public class RepositoryBase: IDisposable
+	public class RepositoryBase: IDisposable, IAsyncDisposable
 	{
+		private bool _disposed;
+
 		public SqlConnection Connection { get; private set; }
 
 		public string ConnectionString { get; private set; }
@@ -189,6 +191,102 @@ namespace Artisan.Orm
 			RunInTransaction(IsolationLevel.Unspecified, action);
 		}
 
+		/// <summary>
+		/// <para>Asynchronous counterpart of
+		/// <see cref="BeginTransaction(IsolationLevel, Action{SqlTransaction})"/>.</para>
+		///
+		/// <para><b>The caller is fully responsible for committing the transaction</b>
+		/// (via <c>await transaction.CommitAsync(ct)</c>). If <paramref name="asyncAction"/>
+		/// returns without committing, the transaction is rolled back on dispose.</para>
+		///
+		/// <para>Prefer <see cref="RunInTransactionAsync(IsolationLevel, Func{SqlTransaction, CancellationToken, Task}, CancellationToken)"/>
+		/// for automatic commit-on-success / rollback-on-exception semantics.</para>
+		/// </summary>
+		public async Task BeginTransactionAsync(IsolationLevel isolationLevel, Func<SqlTransaction, CancellationToken, Task> asyncAction, CancellationToken cancellationToken = default)
+		{
+			var isConnectionClosed = Connection.State == ConnectionState.Closed;
+
+			if (isConnectionClosed)
+				await Connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+			Transaction = (SqlTransaction)await Connection.BeginTransactionAsync(isolationLevel, cancellationToken).ConfigureAwait(false);
+
+			try
+			{
+				await asyncAction(Transaction, cancellationToken).ConfigureAwait(false);
+			}
+			catch
+			{
+				await Transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+				throw;
+			}
+			finally
+			{
+				if (Transaction != null)
+				{
+					await Transaction.DisposeAsync().ConfigureAwait(false);
+					Transaction = null;
+				}
+
+				if (isConnectionClosed)
+					await Connection.CloseAsync().ConfigureAwait(false);
+			}
+		}
+
+		/// <summary>
+		/// Same as <see cref="BeginTransactionAsync(IsolationLevel, Func{SqlTransaction, CancellationToken, Task}, CancellationToken)"/>
+		/// but with <see cref="IsolationLevel.Unspecified"/>. The caller is fully responsible for committing.
+		/// </summary>
+		public Task BeginTransactionAsync(Func<SqlTransaction, CancellationToken, Task> asyncAction, CancellationToken cancellationToken = default)
+		{
+			return BeginTransactionAsync(IsolationLevel.Unspecified, asyncAction, cancellationToken);
+		}
+
+		/// <summary>
+		/// <para>Asynchronous counterpart of
+		/// <see cref="RunInTransaction(IsolationLevel, Action{SqlTransaction})"/>:
+		/// commits <paramref name="asyncAction"/> on successful completion,
+		/// rolls back on exception.</para>
+		///
+		/// <para>The caller must not commit or roll back manually.</para>
+		/// </summary>
+		public async Task RunInTransactionAsync(IsolationLevel isolationLevel, Func<SqlTransaction, CancellationToken, Task> asyncAction, CancellationToken cancellationToken = default)
+		{
+			var isConnectionClosed = Connection.State == ConnectionState.Closed;
+
+			if (isConnectionClosed)
+				await Connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+			Transaction = (SqlTransaction)await Connection.BeginTransactionAsync(isolationLevel, cancellationToken).ConfigureAwait(false);
+
+			try
+			{
+				await asyncAction(Transaction, cancellationToken).ConfigureAwait(false);
+				await Transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+			}
+			finally
+			{
+				// SqlTransaction.DisposeAsync rolls back an uncommitted transaction.
+				if (Transaction != null)
+				{
+					await Transaction.DisposeAsync().ConfigureAwait(false);
+					Transaction = null;
+				}
+
+				if (isConnectionClosed)
+					await Connection.CloseAsync().ConfigureAwait(false);
+			}
+		}
+
+		/// <summary>
+		/// Same as <see cref="RunInTransactionAsync(IsolationLevel, Func{SqlTransaction, CancellationToken, Task}, CancellationToken)"/>
+		/// but with <see cref="IsolationLevel.Unspecified"/>.
+		/// </summary>
+		public Task RunInTransactionAsync(Func<SqlTransaction, CancellationToken, Task> asyncAction, CancellationToken cancellationToken = default)
+		{
+			return RunInTransactionAsync(IsolationLevel.Unspecified, asyncAction, cancellationToken);
+		}
+
 
 		public SqlCommand CreateCommand()
 		{
@@ -348,7 +446,7 @@ namespace Artisan.Orm
 
 			action(cmd);
 
-			return await ExecuteCommandAsync(cmd, cancellationToken);
+			return await ExecuteCommandAsync(cmd, cancellationToken).ConfigureAwait(false);
 		}
 	
 		public async Task<Int32> ExecuteAsync (string sql, params SqlParameter[] sqlParameters)
@@ -357,7 +455,7 @@ namespace Artisan.Orm
 
 			cmd.AddReturnValueParam();
 
-			return await ExecuteCommandAsync(cmd);
+			return await ExecuteCommandAsync(cmd).ConfigureAwait(false);
 		}
 
 		public async Task<Int32> ExecuteAsync (string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
@@ -366,7 +464,7 @@ namespace Artisan.Orm
 
 			cmd.AddReturnValueParam();
 
-			return await ExecuteCommandAsync(cmd, cancellationToken);
+			return await ExecuteCommandAsync(cmd, cancellationToken).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -408,19 +506,19 @@ namespace Artisan.Orm
 		public async Task<T> ReadToAsync<T>(string sql, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadToAsync<T>();
+			return await cmd.ReadToAsync<T>().ConfigureAwait(false);
 		}
 
 		public async Task<T> ReadToAsync<T>(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadToAsync<T>(cancellationToken);
+			return await cmd.ReadToAsync<T>(cancellationToken).ConfigureAwait(false);
 		}
 
 		public async Task<T> ReadToAsync<T>(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
 		{
 			using var cmd = CreateCommand(sql, action);
-			return await cmd.ReadToAsync<T>(cancellationToken);
+			return await cmd.ReadToAsync<T>(cancellationToken).ConfigureAwait(false);
 		}
 
 		public T ReadAs<T>(string sql, params SqlParameter[] sqlParameters)
@@ -438,19 +536,19 @@ namespace Artisan.Orm
 		public async Task<T> ReadAsAsync<T>(string sql, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadAsAsync<T>();
+			return await cmd.ReadAsAsync<T>().ConfigureAwait(false);
 		}
 	
 		public async Task<T> ReadAsAsync<T>(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadAsAsync<T>(cancellationToken);
+			return await cmd.ReadAsAsync<T>(cancellationToken).ConfigureAwait(false);
 		}
 
 		public async Task<T> ReadAsAsync<T>(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
 		{
 			using var cmd = CreateCommand(sql, action);
-			return await cmd.ReadAsAsync<T>(cancellationToken);
+			return await cmd.ReadAsAsync<T>(cancellationToken).ConfigureAwait(false);
 		}
 
 		#endregion
@@ -472,19 +570,19 @@ namespace Artisan.Orm
 		public async Task<IList<T>> ReadToListAsync<T>(string sql, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadToListAsync<T>();
+			return await cmd.ReadToListAsync<T>().ConfigureAwait(false);
 		}
 
 		public async Task<IList<T>> ReadToListAsync<T>(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadToListAsync<T>(cancellationToken);
+			return await cmd.ReadToListAsync<T>(cancellationToken).ConfigureAwait(false);
 		}
 
 		public async Task<IList<T>> ReadToListAsync<T>(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
 		{
 			using var cmd = CreateCommand(sql, action);
-			return await cmd.ReadToListAsync<T>(cancellationToken);
+			return await cmd.ReadToListAsync<T>(cancellationToken).ConfigureAwait(false);
 		}
 
 		public IList<T> ReadAsList<T>(string sql, params SqlParameter[] sqlParameters)
@@ -502,19 +600,19 @@ namespace Artisan.Orm
 		public async Task<IList<T>> ReadAsListAsync<T>(string sql, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadAsListAsync<T>();
+			return await cmd.ReadAsListAsync<T>().ConfigureAwait(false);
 		}
 
 		public async Task<IList<T>> ReadAsListAsync<T>(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadAsListAsync<T>(cancellationToken);
+			return await cmd.ReadAsListAsync<T>(cancellationToken).ConfigureAwait(false);
 		}
 
 		public async Task<IList<T>> ReadAsListAsync<T>(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
 		{
 			using var cmd = CreateCommand(sql, action);
-			return await cmd.ReadAsListAsync<T>(cancellationToken);
+			return await cmd.ReadAsListAsync<T>(cancellationToken).ConfigureAwait(false);
 		}
 	
 		#endregion
@@ -536,19 +634,19 @@ namespace Artisan.Orm
 		public async Task<ObjectRow> ReadToObjectRowAsync<T>(string sql, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadToObjectRowAsync<T>();
+			return await cmd.ReadToObjectRowAsync<T>().ConfigureAwait(false);
 		}
 
 		public async Task<ObjectRow> ReadToObjectRowAsync<T>(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadToObjectRowAsync<T>(cancellationToken);
+			return await cmd.ReadToObjectRowAsync<T>(cancellationToken).ConfigureAwait(false);
 		}
 
 		public async Task<ObjectRow> ReadToObjectRowAsync<T>(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
 		{
 			using var cmd = CreateCommand(sql, action);
-			return await cmd.ReadToObjectRowAsync<T>(cancellationToken);
+			return await cmd.ReadToObjectRowAsync<T>(cancellationToken).ConfigureAwait(false);
 		}
 	
 		public ObjectRow ReadAsObjectRow(string sql, params SqlParameter[] sqlParameters)
@@ -566,18 +664,18 @@ namespace Artisan.Orm
 		public async Task<ObjectRow> ReadAsObjectRowAsync(string sql, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadAsObjectRowAsync();
+			return await cmd.ReadAsObjectRowAsync().ConfigureAwait(false);
 		}
 		public async Task<ObjectRow> ReadAsObjectRowAsync(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadAsObjectRowAsync(cancellationToken);
+			return await cmd.ReadAsObjectRowAsync(cancellationToken).ConfigureAwait(false);
 		}
 
 		public async Task<ObjectRow> ReadAsObjectRowAsync(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
 		{
 			using var cmd = CreateCommand(sql, action);
-			return await cmd.ReadAsObjectRowAsync(cancellationToken);
+			return await cmd.ReadAsObjectRowAsync(cancellationToken).ConfigureAwait(false);
 		}
 
 	
@@ -600,19 +698,19 @@ namespace Artisan.Orm
 		public async Task<ObjectRows> ReadToObjectRowsAsync<T>(string sql, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadToObjectRowsAsync<T>();
+			return await cmd.ReadToObjectRowsAsync<T>().ConfigureAwait(false);
 		}
 
 		public async Task<ObjectRows> ReadToObjectRowsAsync<T>(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadToObjectRowsAsync<T>(cancellationToken);
+			return await cmd.ReadToObjectRowsAsync<T>(cancellationToken).ConfigureAwait(false);
 		}
 
 		public async Task<ObjectRows> ReadToObjectRowsAsync<T>(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
 		{
 			using var cmd = CreateCommand(sql, action);
-			return await cmd.ReadToObjectRowsAsync<T>(cancellationToken);
+			return await cmd.ReadToObjectRowsAsync<T>(cancellationToken).ConfigureAwait(false);
 		}
 	
 		public ObjectRows ReadAsObjectRows(string sql, params SqlParameter[] sqlParameters)
@@ -630,19 +728,19 @@ namespace Artisan.Orm
 		public async Task<ObjectRows> ReadAsObjectRowsAsync(string sql, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadAsObjectRowsAsync();
+			return await cmd.ReadAsObjectRowsAsync().ConfigureAwait(false);
 		}
 
 		public async Task<ObjectRows> ReadAsObjectRowsAsync(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadAsObjectRowsAsync(cancellationToken);
+			return await cmd.ReadAsObjectRowsAsync(cancellationToken).ConfigureAwait(false);
 		}
 
 		public async Task<ObjectRows> ReadAsObjectRowsAsync(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
 		{
 			using var cmd = CreateCommand(sql, action);
-			return await cmd.ReadAsObjectRowsAsync(cancellationToken);
+			return await cmd.ReadAsObjectRowsAsync(cancellationToken).ConfigureAwait(false);
 		}
 
 		#endregion
@@ -676,36 +774,36 @@ namespace Artisan.Orm
 		public async Task<IDictionary<TKey, TValue>> ReadToDictionaryAsync<TKey, TValue>(string sql, params SqlParameter[] sqlParameters) 
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadToDictionaryAsync<TKey, TValue>();
+			return await cmd.ReadToDictionaryAsync<TKey, TValue>().ConfigureAwait(false);
 		}
 
 		public async Task<IDictionary<TKey, TValue>> ReadToDictionaryAsync<TKey, TValue>(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters) 
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadToDictionaryAsync<TKey, TValue>(cancellationToken);
+			return await cmd.ReadToDictionaryAsync<TKey, TValue>(cancellationToken).ConfigureAwait(false);
 		}
 
 		public async Task<IDictionary<TKey, TValue>> ReadToDictionaryAsync<TKey, TValue>(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
 		{
 			using var cmd = CreateCommand(sql, action);
-			return await cmd.ReadToDictionaryAsync<TKey, TValue>(cancellationToken);
+			return await cmd.ReadToDictionaryAsync<TKey, TValue>(cancellationToken).ConfigureAwait(false);
 		}
 
 		public async Task<IDictionary<TKey, TValue>> ReadAsDictionaryAsync<TKey, TValue>(string sql, params SqlParameter[] sqlParameters) 
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadAsDictionaryAsync<TKey, TValue>();
+			return await cmd.ReadAsDictionaryAsync<TKey, TValue>().ConfigureAwait(false);
 		}
 		public async Task<IDictionary<TKey, TValue>> ReadAsDictionaryAsync<TKey, TValue>(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters) 
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
-			return await cmd.ReadAsDictionaryAsync<TKey, TValue>(cancellationToken);
+			return await cmd.ReadAsDictionaryAsync<TKey, TValue>(cancellationToken).ConfigureAwait(false);
 		}
 
 		public async Task<IDictionary<TKey, TValue>> ReadAsDictionaryAsync<TKey, TValue>(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
 		{
 			using var cmd = CreateCommand(sql, action);
-			return await cmd.ReadAsDictionaryAsync<TKey, TValue>(cancellationToken);
+			return await cmd.ReadAsDictionaryAsync<TKey, TValue>(cancellationToken).ConfigureAwait(false);
 		}
 
 		#endregion 
@@ -810,13 +908,55 @@ namespace Artisan.Orm
 
 		public void Dispose()
 		{
-			Transaction?.Dispose();
-			Transaction = null;
-
-			Connection?.Dispose();
-			Connection = null;
-
+			Dispose(disposing: true);
 			GC.SuppressFinalize(this);
+		}
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (_disposed) return;
+
+			if (disposing)
+			{
+				Transaction?.Dispose();
+				Transaction = null;
+
+				Connection?.Dispose();
+				Connection = null;
+			}
+
+			_disposed = true;
+		}
+
+		public async ValueTask DisposeAsync()
+		{
+			await DisposeAsyncCore().ConfigureAwait(false);
+
+			// The managed-resource branch of Dispose(bool) is a no-op after
+			// DisposeAsyncCore has released everything, but we still call
+			// Dispose(false) so derived classes that override it to release
+			// unmanaged resources get their callback.
+			Dispose(disposing: false);
+			GC.SuppressFinalize(this);
+		}
+
+		protected virtual async ValueTask DisposeAsyncCore()
+		{
+			if (_disposed) return;
+
+			if (Transaction != null)
+			{
+				await Transaction.DisposeAsync().ConfigureAwait(false);
+				Transaction = null;
+			}
+
+			if (Connection != null)
+			{
+				await Connection.DisposeAsync().ConfigureAwait(false);
+				Connection = null;
+			}
+
+			_disposed = true;
 		}
 	}
 
