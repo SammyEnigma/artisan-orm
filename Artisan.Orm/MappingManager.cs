@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using Microsoft.Data.SqlClient;
 
 namespace Artisan.Orm
@@ -24,7 +25,21 @@ namespace Artisan.Orm
 		private static readonly ConcurrentDictionary<string, SqlParameter[]> SqlParametersDictionary = new ConcurrentDictionary<string, SqlParameter[]>();
 
 
-		static MappingManager()
+		/// <summary>
+		/// One-shot, thread-safe lazy initializer for the mapper scan. The scan is deliberately
+		/// kept out of the static constructor: a failure in <see cref="Assembly.GetTypes"/>
+		/// (e.g. a third-party assembly in the AppDomain with unresolvable dependencies) would
+		/// otherwise propagate as <see cref="TypeInitializationException"/> and mark the type
+		/// permanently unusable for the life of the process. With this pattern a broken
+		/// assembly no longer disables the whole ORM — its unloadable types are simply skipped
+		/// (see <see cref="SafeGetTypes"/>).
+		/// </summary>
+		private static readonly Lazy<bool> _initialized =
+			new Lazy<bool>(ScanMappers, LazyThreadSafetyMode.ExecutionAndPublication);
+
+		private static void EnsureInitialized() { _ = _initialized.Value; }
+
+		private static bool ScanMappers()
 		{
 			foreach (var type in GetTypesWithMapperForAttribute())
 			{
@@ -99,11 +114,15 @@ namespace Artisan.Orm
 
 				}
 			}
+
+			return true;
 		}
 
 
 		public static Func<SqlDataReader, T> GetCreateObjectFunc<T>()
 		{
+			EnsureInitialized();
+
 			if (CreateObjectFuncDictionary.TryGetValue(typeof(T), out Delegate del))
 				return (Func<SqlDataReader, T>)del;
 
@@ -112,6 +131,8 @@ namespace Artisan.Orm
 	
 		public static Func<SqlDataReader, ObjectRow> GetCreateObjectRowFunc<T>()
 		{
+			EnsureInitialized();
+
 			if (CreateObjectRowFuncDictionary.TryGetValue(typeof(T), out Delegate del))
 				return (Func<SqlDataReader, ObjectRow>)del;
 
@@ -121,6 +142,8 @@ namespace Artisan.Orm
 
 		public static Func<DataTable> GetCreateDataTableFunc<T>()
 		{
+			EnsureInitialized();
+
 			return CreateDataFuncsDictionary.TryGetValue(typeof(T), out Tuple<Func<DataTable>, Delegate> tuple)
 				? tuple.Item1
 				: null;
@@ -128,6 +151,8 @@ namespace Artisan.Orm
 
 		public static Func<T, object[]> GetCreateDataRowFunc<T>()
 		{
+			EnsureInitialized();
+
 			return CreateDataFuncsDictionary.TryGetValue(typeof(T), out Tuple<Func<DataTable>, Delegate> tuple)
 				? (Func<T, object[]>)tuple.Item2
 				: null;
@@ -136,6 +161,8 @@ namespace Artisan.Orm
 
 		public static bool GetCreateDataFuncs<T>(out Func<DataTable> createDataTableFunc, out Func<T, object[]> createDataRowFunc)
 		{
+			EnsureInitialized();
+
 			if (CreateDataFuncsDictionary.TryGetValue(typeof(T), out Tuple<Func<DataTable>, Delegate> tuple))
 			{
 				createDataTableFunc = tuple.Item1;
@@ -153,6 +180,8 @@ namespace Artisan.Orm
 
 		public static bool GetCreateDataFuncs(Type type, out Func<DataTable> createDataTableFunc, out Delegate createDataRowFunc)
 		{
+			EnsureInitialized();
+
 			if (CreateDataFuncsDictionary.TryGetValue(type, out Tuple<Func<DataTable>, Delegate> funcs))
 			{
 				createDataTableFunc = funcs.Item1;
@@ -208,10 +237,35 @@ namespace Artisan.Orm
 		{
 			foreach (Assembly assembly in GetCurrentAndDependentAssemblies())
 			{
-				foreach (Type type in assembly.GetTypes().Where(type => type.GetCustomAttributes(typeof(MapperForAttribute), true).Length > 0))
+				foreach (Type type in SafeGetTypes(assembly).Where(type => type.GetCustomAttributes(typeof(MapperForAttribute), true).Length > 0))
 				{
 					yield return type;
 				}
+			}
+		}
+
+		/// <summary>
+		/// Enumerates the types in <paramref name="assembly"/>, tolerant of
+		/// <see cref="ReflectionTypeLoadException"/>: when some types in the assembly cannot
+		/// be loaded (missing dependencies, version mismatches, etc.) the loadable ones are
+		/// still returned and the rest are silently skipped. A single broken third-party
+		/// assembly in the AppDomain therefore cannot disable the entire mapper registry.
+		/// </summary>
+		private static IEnumerable<Type> SafeGetTypes(Assembly assembly)
+		{
+			if (assembly.IsDynamic) return Array.Empty<Type>();
+
+			try
+			{
+				return assembly.GetTypes();
+			}
+			catch (ReflectionTypeLoadException ex)
+			{
+				return ex.Types.Where(t => t != null);
+			}
+			catch
+			{
+				return Array.Empty<Type>();
 			}
 		}
 
@@ -244,8 +298,17 @@ namespace Artisan.Orm
 
 		public static IEnumerable<string> GetNamesOfAssembliesReferencedBy(Assembly assembly)
 		{
-			return assembly.GetReferencedAssemblies()
-				.Select(assemblyName => assemblyName.FullName);
+			if (assembly.IsDynamic) return Array.Empty<string>();
+
+			try
+			{
+				return assembly.GetReferencedAssemblies()
+					.Select(assemblyName => assemblyName.FullName);
+			}
+			catch
+			{
+				return Array.Empty<string>();
+			}
 		}
 
 		#endregion
