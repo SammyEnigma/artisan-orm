@@ -735,8 +735,8 @@ namespace Artisan.Orm
 		}
 
 		/// <summary>
-		/// <para>Convert <see cref="ids"/> param to DataTable with name <c>ToIntIdDataTable</c> and <c>Id</c> column</para>
-		/// <para>and add <see cref="parameterName"/> SqlParameter to the <see cref="cmd"/> SqlCommand</para>
+		/// <para>Convert <paramref name="ids"/> param to DataTable with name <c>ToIntIdDataTable</c> and <c>Id</c> column</para>
+		/// <para>and add <paramref name="parameterName"/> SqlParameter to the <paramref name="cmd"/> SqlCommand</para>
 		/// <para>Database must have the following user-defined table type:</para>
 		/// <para><c>create type IntIdTableType as table (Id int not null primary key clustered)</c></para>
 		/// </summary>
