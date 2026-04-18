@@ -178,7 +178,7 @@ namespace Artisan.Orm
 			}
 
 			if (memberBindings.Count == 0)
-				throw new ApplicationException($"Creation of AutoMapping Func failed. No property-field name matching found for class = '{typeof(T).FullName}' and CommandText = '{dr.GetCommandText()}'");
+				throw new ArtisanMappingException($"Creation of AutoMapping Func failed. No property-field name matching found for class = '{typeof(T).FullName}' and CommandText = '{dr.GetCommandText()}'");
 		
 
 			var ctor = Expression.New(typeof(T));

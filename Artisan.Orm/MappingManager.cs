@@ -40,7 +40,7 @@ namespace Artisan.Orm
 					if (methodInfo == null)
 					{
 						if (attribute.RequiredMethods.Intersect(new []{RequiredMethod.All, RequiredMethod.AllMain, RequiredMethod.BothForObject, RequiredMethod.CreateObject}).Any())
-							throw new NullReferenceException($"Mapper {type.Name} does not contain required method CreateObject");
+							throw new ArtisanMappingException($"Mapper {type.Name} does not contain required method CreateObject");
 					}
 					else
 					{
@@ -56,7 +56,7 @@ namespace Artisan.Orm
 					if (methodInfo == null)
 					{
 						if (attribute.RequiredMethods.Intersect(new []{RequiredMethod.All, RequiredMethod.BothForObject, RequiredMethod.CreateObjectRow}).Any())
-							throw new NullReferenceException($"Mapper {type.Name} does not contain required method CreateObjectRow");
+							throw new ArtisanMappingException($"Mapper {type.Name} does not contain required method CreateObjectRow");
 					}
 					else
 					{
@@ -73,7 +73,7 @@ namespace Artisan.Orm
 					if (methodInfo == null)
 					{
 						if (attribute.RequiredMethods.Intersect(new []{RequiredMethod.All, RequiredMethod.BothForDataTable }).Any())
-							throw new NullReferenceException($"Mapper {type.Name} does not contain required method CreateDataTable");
+							throw new ArtisanMappingException($"Mapper {type.Name} does not contain required method CreateDataTable");
 					}
 					else
 					{
@@ -88,7 +88,7 @@ namespace Artisan.Orm
 
 					if (methodInfo == null) {
 						if (attribute.RequiredMethods.Intersect(new []{RequiredMethod.All, RequiredMethod.BothForDataTable }).Any())
-							throw new NullReferenceException($"Mapper {type.Name} does not contain required method CreateDataRow");
+							throw new ArtisanMappingException($"Mapper {type.Name} does not contain required method CreateDataRow");
 					}
 					else {
 						var funcType = typeof(Func<,>).MakeGenericType(attribute.MapperForType, typeof(object[]));
@@ -107,7 +107,7 @@ namespace Artisan.Orm
 			if (CreateObjectFuncDictionary.TryGetValue(typeof(T), out Delegate del))
 				return (Func<SqlDataReader, T>)del;
 
-			throw new NullReferenceException($"CreateObject Func not found. Check if MapperFor {typeof(T).FullName} exists and CreateObject exist.");
+			throw new ArtisanMappingException($"CreateObject Func not found. Check if MapperFor {typeof(T).FullName} exists and CreateObject exist.");
 		}
 	
 		public static Func<SqlDataReader, ObjectRow> GetCreateObjectRowFunc<T>()
@@ -115,7 +115,7 @@ namespace Artisan.Orm
 			if (CreateObjectRowFuncDictionary.TryGetValue(typeof(T), out Delegate del))
 				return (Func<SqlDataReader, ObjectRow>)del;
 
-			throw new NullReferenceException($"CreateRow Func not found. Check if MapperFor {typeof(T).FullName} and CreateRow exist.");
+			throw new ArtisanMappingException($"CreateRow Func not found. Check if MapperFor {typeof(T).FullName} and CreateRow exist.");
 		}
 
 
