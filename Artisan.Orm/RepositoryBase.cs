@@ -57,20 +57,45 @@ namespace Artisan.Orm
 			: this((SqlTransaction)null, connectionString) {}
 
 
+		/// <summary>
+		/// <para>Low-level transaction helper. Opens the connection if it was closed,
+		/// begins a <see cref="SqlTransaction"/> with the given <paramref name="isolationLevel"/>
+		/// and passes it to <paramref name="action"/>.</para>
+		///
+		/// <para><b>The caller is fully responsible for committing the transaction.</b>
+		/// If <paramref name="action"/> returns without calling
+		/// <see cref="SqlTransaction.Commit"/>, the transaction is disposed on exit
+		/// and all changes are rolled back. This is by design: the method does not
+		/// know whether the work inside <paramref name="action"/> is meant to be
+		/// persisted or not.</para>
+		///
+		/// <para>If <paramref name="action"/> throws, the transaction is rolled back
+		/// and the exception is rethrown.</para>
+		///
+		/// <para>On exit — whether successful or not — the transaction is disposed,
+		/// <see cref="Transaction"/> is set to <c>null</c>, and the connection is
+		/// closed if it was opened by this method.</para>
+		///
+		/// <para>Prefer <see cref="RunInTransaction(IsolationLevel, Action{SqlTransaction})"/>
+		/// if you want automatic commit-on-success / rollback-on-exception semantics.</para>
+		/// </summary>
+		/// <param name="isolationLevel">The isolation level under which the transaction runs.</param>
+		/// <param name="action">The code to execute inside the transaction. Must call
+		/// <see cref="SqlTransaction.Commit"/> explicitly to persist any changes.</param>
 		public void BeginTransaction(IsolationLevel isolationLevel, Action<SqlTransaction> action)
 		{
 			var isConnectionClosed = Connection.State == ConnectionState.Closed;
 
-			if (isConnectionClosed) 
+			if (isConnectionClosed)
 				Connection.Open();
 
 			Transaction = Connection.BeginTransaction(isolationLevel);
-		
+
 			try
 			{
 				action(Transaction);
 			}
-			catch 
+			catch
 			{
 				Transaction.Rollback();
 				throw;
@@ -85,9 +110,83 @@ namespace Artisan.Orm
 			}
 		}
 
+		/// <summary>
+		/// <para>Same as <see cref="BeginTransaction(IsolationLevel, Action{SqlTransaction})"/>
+		/// but with <see cref="IsolationLevel.Unspecified"/>, which lets SQL Server apply
+		/// its default isolation level (normally <c>READ COMMITTED</c>).</para>
+		///
+		/// <para><b>The caller is fully responsible for committing the transaction</b> —
+		/// see the overload for details.</para>
+		///
+		/// <para>Prefer <see cref="RunInTransaction(Action{SqlTransaction})"/> if you want
+		/// automatic commit-on-success / rollback-on-exception semantics.</para>
+		/// </summary>
+		/// <param name="action">The code to execute inside the transaction. Must call
+		/// <see cref="SqlTransaction.Commit"/> explicitly to persist any changes.</param>
 		public void BeginTransaction(Action<SqlTransaction> action)
 		{
 			BeginTransaction(IsolationLevel.Unspecified, action);
+		}
+
+		/// <summary>
+		/// <para>Runs <paramref name="action"/> inside a <see cref="SqlTransaction"/>
+		/// with automatic commit/rollback semantics.</para>
+		///
+		/// <para>Opens the connection if it was closed, begins a transaction with the
+		/// given <paramref name="isolationLevel"/>, and passes it to <paramref name="action"/>.</para>
+		///
+		/// <para>If <paramref name="action"/> completes normally, the transaction is
+		/// committed automatically. If it throws, the transaction is rolled back and
+		/// the exception is rethrown.</para>
+		///
+		/// <para>On exit — whether successful or not — the transaction is disposed,
+		/// <see cref="Transaction"/> is set to <c>null</c>, and the connection is
+		/// closed if it was opened by this method.</para>
+		///
+		/// <para>The caller must not call <see cref="SqlTransaction.Commit"/> or
+		/// <see cref="SqlTransaction.Rollback()"/> inside <paramref name="action"/> —
+		/// that is handled by this method.</para>
+		/// </summary>
+		/// <param name="isolationLevel">The isolation level under which the transaction runs.</param>
+		/// <param name="action">The code to execute inside the transaction.</param>
+		public void RunInTransaction(IsolationLevel isolationLevel, Action<SqlTransaction> action)
+		{
+			var isConnectionClosed = Connection.State == ConnectionState.Closed;
+
+			if (isConnectionClosed)
+				Connection.Open();
+
+			Transaction = Connection.BeginTransaction(isolationLevel);
+
+			try
+			{
+				action(Transaction);
+				Transaction.Commit();
+			}
+			finally
+			{
+				// SqlTransaction.Dispose() rolls back an uncommitted transaction,
+				// so no explicit Rollback is needed in the catch path.
+				Transaction?.Dispose();
+				Transaction = null;
+
+				if (isConnectionClosed)
+					Connection.Close();
+			}
+		}
+
+		/// <summary>
+		/// <para>Same as <see cref="RunInTransaction(IsolationLevel, Action{SqlTransaction})"/>
+		/// but with <see cref="IsolationLevel.Unspecified"/>, which lets SQL Server apply
+		/// its default isolation level (normally <c>READ COMMITTED</c>).</para>
+		///
+		/// <para>Commits on successful completion of <paramref name="action"/>,
+		/// rolls back on exception. The caller must not commit or roll back manually.</para>
+		/// </summary>
+		/// <param name="action">The code to execute inside the transaction.</param>
+		public void RunInTransaction(Action<SqlTransaction> action)
+		{
+			RunInTransaction(IsolationLevel.Unspecified, action);
 		}
 
 
