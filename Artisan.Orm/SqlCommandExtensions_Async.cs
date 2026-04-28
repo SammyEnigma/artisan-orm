@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
@@ -251,7 +252,129 @@ namespace Artisan.Orm
 
 		#endregion
 
-	
+
+		#region [ ReadToAsyncEnumerable, ReadAsAsyncEnumerable ]
+
+		private static async IAsyncEnumerable<T> ReadToAsyncEnumerableValues<T>(
+			this SqlCommand cmd,
+			[EnumeratorCancellation] CancellationToken cancellationToken = default)
+		{
+			var type = typeof(T);
+			var isNullableValueType = type.IsNullableValueType();
+
+			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleResult).ConfigureAwait(false);
+
+			await using var dr = await cmd.ExecuteReaderAsync(readerFlags, cancellationToken).ConfigureAwait(false);
+
+			if (isNullableValueType)
+			{
+				var underlyingType = type.GetUnderlyingType();
+				while (await dr.ReadAsync(cancellationToken).ConfigureAwait(false))
+					yield return dr.IsDBNull(0) ? default! : SqlDataReaderExtensions.GetValue<T>(dr, underlyingType);  // default! — T is Nullable<X> here, null is valid
+			}
+			else
+			{
+				while (await dr.ReadAsync(cancellationToken).ConfigureAwait(false))
+					yield return SqlDataReaderExtensions.GetValue<T>(dr, type);
+			}
+		}
+
+		private static async IAsyncEnumerable<T> ReadToAsyncEnumerableObjects<T>(
+			this SqlCommand cmd,
+			Func<SqlDataReader, T> createFunc,
+			[EnumeratorCancellation] CancellationToken cancellationToken = default)
+		{
+			var isNullableValueType = typeof(T).IsNullableValueType();
+
+			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleResult).ConfigureAwait(false);
+
+			await using var dr = await cmd.ExecuteReaderAsync(readerFlags, cancellationToken).ConfigureAwait(false);
+
+			if (isNullableValueType)
+			{
+				while (await dr.ReadAsync(cancellationToken).ConfigureAwait(false))
+				{
+					if (dr.IsDBNull(0))
+						yield return default!;  // default! — T is Nullable<X> here, null is valid
+					else
+						yield return createFunc(dr);
+				}
+			}
+			else
+			{
+				while (await dr.ReadAsync(cancellationToken).ConfigureAwait(false))
+					yield return createFunc(dr);
+			}
+		}
+
+		private static async IAsyncEnumerable<T> ReadAsAsyncEnumerableObjects<T>(
+			this SqlCommand cmd,
+			[EnumeratorCancellation] CancellationToken cancellationToken = default)
+		{
+			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleResult).ConfigureAwait(false);
+
+			await using var dr = await cmd.ExecuteReaderAsync(readerFlags, cancellationToken).ConfigureAwait(false);
+
+			var key = SqlDataReaderExtensions.GetAutoCreateObjectFuncKey<T>(dr);
+			var autoMappingFunc = MappingManager.GetAutoCreateObjectFunc<T>(key);
+
+			if (autoMappingFunc == null)
+			{
+				autoMappingFunc = SqlDataReaderExtensions.CreateAutoMappingFunc<T>(dr);
+				MappingManager.AddAutoCreateObjectFunc(key, autoMappingFunc);
+			}
+
+			while (await dr.ReadAsync(cancellationToken).ConfigureAwait(false))
+				yield return autoMappingFunc(dr);
+		}
+
+
+		/// <summary>
+		/// Streams rows from the SQL result set as an <see cref="IAsyncEnumerable{T}"/>,
+		/// using <paramref name="createFunc"/> to map each row.
+		/// Rows are yielded one at a time — no buffering into a list.
+		/// </summary>
+		public static IAsyncEnumerable<T> ReadToAsyncEnumerable<T>(
+			this SqlCommand cmd,
+			Func<SqlDataReader, T> createFunc,
+			CancellationToken cancellationToken = default)
+		{
+			return cmd.ReadToAsyncEnumerableObjects(createFunc, cancellationToken);
+		}
+
+		/// <summary>
+		/// Streams rows from the SQL result set as an <see cref="IAsyncEnumerable{T}"/>,
+		/// using a registered mapping function for <typeparamref name="T"/> (or scalar conversion for simple types).
+		/// Rows are yielded one at a time — no buffering into a list.
+		/// </summary>
+		public static IAsyncEnumerable<T> ReadToAsyncEnumerable<T>(
+			this SqlCommand cmd,
+			CancellationToken cancellationToken = default)
+		{
+			if (typeof(T).IsSimpleType())
+				return cmd.ReadToAsyncEnumerableValues<T>(cancellationToken);
+
+			return cmd.ReadToAsyncEnumerableObjects(MappingManager.GetCreateObjectFunc<T>(), cancellationToken);
+		}
+
+		/// <summary>
+		/// Streams rows from the SQL result set as an <see cref="IAsyncEnumerable{T}"/>,
+		/// using auto-mapping (reflection-based, result cached after first execution).
+		/// Rows are yielded one at a time — no buffering into a list.
+		/// </summary>
+		public static IAsyncEnumerable<T> ReadAsAsyncEnumerable<T>(
+			this SqlCommand cmd,
+			CancellationToken cancellationToken = default)
+		{
+			if (typeof(T).IsSimpleType())
+				return cmd.ReadToAsyncEnumerableValues<T>(cancellationToken);
+
+			return cmd.ReadAsAsyncEnumerableObjects<T>(cancellationToken);
+		}
+
+		#endregion
+
+
 		#region [ ReadToObjectRow(s)Async, ReadAsObjectRow(s)Async ]
 
 		public static async Task<ObjectRow?> ReadToObjectRowAsync(this SqlCommand cmd, Func<SqlDataReader, ObjectRow> createFunc, CancellationToken cancellationToken = default)

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
@@ -836,7 +837,75 @@ namespace Artisan.Orm
 		}
 	
 		#endregion
-	
+
+		#region [ ReadToAsyncEnumerable, ReadAsAsyncEnumerable ]
+
+		/// <summary>
+		/// Streams rows from the SQL result set as an <see cref="IAsyncEnumerable{T}"/>,
+		/// using a registered mapping function for <typeparamref name="T"/> (or scalar conversion for simple types).
+		/// Rows are yielded one at a time — no buffering into a list.
+		/// Supports cancellation via <c>.WithCancellation(ct)</c> or the <paramref name="cancellationToken"/> parameter.
+		/// </summary>
+		public async IAsyncEnumerable<T> ReadToAsyncEnumerable<T>(
+			string sql,
+			[EnumeratorCancellation] CancellationToken cancellationToken = default,
+			params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			await foreach (var item in cmd.ReadToAsyncEnumerable<T>(cancellationToken).ConfigureAwait(false))
+				yield return item;
+		}
+
+		/// <summary>
+		/// Streams rows from the SQL result set as an <see cref="IAsyncEnumerable{T}"/>,
+		/// using a registered mapping function for <typeparamref name="T"/> (or scalar conversion for simple types).
+		/// Rows are yielded one at a time — no buffering into a list.
+		/// Supports cancellation via <c>.WithCancellation(ct)</c> or the <paramref name="cancellationToken"/> parameter.
+		/// </summary>
+		public async IAsyncEnumerable<T> ReadToAsyncEnumerable<T>(
+			string sql,
+			Action<SqlCommand> action,
+			[EnumeratorCancellation] CancellationToken cancellationToken = default)
+		{
+			using var cmd = CreateCommand(sql, action);
+			await foreach (var item in cmd.ReadToAsyncEnumerable<T>(cancellationToken).ConfigureAwait(false))
+				yield return item;
+		}
+
+		/// <summary>
+		/// Streams rows from the SQL result set as an <see cref="IAsyncEnumerable{T}"/>,
+		/// using auto-mapping (reflection-based, result cached after first execution).
+		/// Rows are yielded one at a time — no buffering into a list.
+		/// Supports cancellation via <c>.WithCancellation(ct)</c> or the <paramref name="cancellationToken"/> parameter.
+		/// </summary>
+		public async IAsyncEnumerable<T> ReadAsAsyncEnumerable<T>(
+			string sql,
+			[EnumeratorCancellation] CancellationToken cancellationToken = default,
+			params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			await foreach (var item in cmd.ReadAsAsyncEnumerable<T>(cancellationToken).ConfigureAwait(false))
+				yield return item;
+		}
+
+		/// <summary>
+		/// Streams rows from the SQL result set as an <see cref="IAsyncEnumerable{T}"/>,
+		/// using auto-mapping (reflection-based, result cached after first execution).
+		/// Rows are yielded one at a time — no buffering into a list.
+		/// Supports cancellation via <c>.WithCancellation(ct)</c> or the <paramref name="cancellationToken"/> parameter.
+		/// </summary>
+		public async IAsyncEnumerable<T> ReadAsAsyncEnumerable<T>(
+			string sql,
+			Action<SqlCommand> action,
+			[EnumeratorCancellation] CancellationToken cancellationToken = default)
+		{
+			using var cmd = CreateCommand(sql, action);
+			await foreach (var item in cmd.ReadAsAsyncEnumerable<T>(cancellationToken).ConfigureAwait(false))
+				yield return item;
+		}
+
+		#endregion
+
 		#region [ ReadToTree, ReadToTreeList ]
 
 		public T? ReadToTree<T>(string sql, bool hierarchicallySorted = false, params SqlParameter[] sqlParameters) where T : class, INode<T>

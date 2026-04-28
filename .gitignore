@@ -30,6 +30,7 @@ bld/
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
+build_out*.txt
 
 # NUNIT
 *.VisualState.xml
