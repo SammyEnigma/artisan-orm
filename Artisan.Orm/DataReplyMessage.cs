@@ -9,16 +9,16 @@ namespace Artisan.Orm
 	public class DataReplyMessage
 	{
 		[DataMember]
-		public String Code;
+		public string? Code;
 
 		[DataMember(EmitDefaultValue = false)]
-		public String Text;
+		public string? Text;
 
 		[DataMember(EmitDefaultValue = false)]
 		public Int64? Id;
 
 		[DataMember(EmitDefaultValue = false)]
-		public Object Value;
+		public object? Value;
 	}
 
 	[MapperFor( typeof(DataReplyMessage), RequiredMethod.CreateObject)]

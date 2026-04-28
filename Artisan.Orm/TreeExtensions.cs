@@ -36,7 +36,7 @@ namespace Artisan.Orm
 
 
 
-		public static T ToTree<T>(this IEnumerable<T> nodes, bool hierarchicallySorted = false) where T: class, INode<T>
+		public static T? ToTree<T>(this IEnumerable<T> nodes, bool hierarchicallySorted = false) where T: class, INode<T>
 		{
 			if (hierarchicallySorted)
 				return ConvertHierarchicallySortedNodeListToTrees(nodes).FirstOrDefault();
@@ -44,15 +44,15 @@ namespace Artisan.Orm
 			return ConvertHierarchicallyUnsortedNodeListToTrees(nodes).FirstOrDefault();
 		}
 
-		public static TNode ToTree<TNode, TId>(
-			this IEnumerable<TNode> nodes, 
+		public static TNode? ToTree<TNode, TId>(
+			this IEnumerable<TNode> nodes,
 			Func<TNode, TId> idSelector,
 			Func<TNode, TId?> parentIdSelector,
 			Action<TNode, TNode> linkParentAndNodeAction,
 			bool hierarchicallySorted = false
-		)	
-			where TNode: class 
-			where TId: struct 
+		)
+			where TNode: class
+			where TId: struct
 		{
 			if (hierarchicallySorted)
 				return ConvertHierarchicallySortedNodeListToTrees(nodes, idSelector, parentIdSelector, linkParentAndNodeAction).FirstOrDefault();
@@ -67,8 +67,8 @@ namespace Artisan.Orm
 		private static IList<T> ConvertHierarchicallySortedNodeListToTrees<T>(IEnumerable<T> nodes) where T: class, INode<T>
 		{
 			var parentStack = new Stack<T>();
-			var parent = default(T);
-			var prevNode = default(T);
+			T? parent = null;
+			T? prevNode = null;
 			var rootNodes = new List<T>();
 
 			foreach (var node in nodes)
@@ -85,7 +85,7 @@ namespace Artisan.Orm
 
 					parent.Children.Add(node);
 				}
-				else if (node.ParentId == prevNode.Id)
+				else if (node.ParentId == prevNode!.Id)  // prevNode is non-null: set at end of previous iteration
 				{
 					parentStack.Push(parent);
 
@@ -105,6 +105,7 @@ namespace Artisan.Orm
 
 						if (node.ParentId.Value == parent.Id)
 						{
+							parent.Children ??= new List<T>();
 							parent.Children.Add(node);
 							parentFound = true;
 						}
@@ -127,17 +128,17 @@ namespace Artisan.Orm
 
 		private static IList<TNode> ConvertHierarchicallySortedNodeListToTrees<TNode, TId>
 		(
-			IEnumerable<TNode> nodes, 
+			IEnumerable<TNode> nodes,
 			Func<TNode, TId> idSelector,
 			Func<TNode, TId?> parentIdSelector,
 			Action<TNode, TNode> linkParentAndNodeAction
-		)	
-			where TNode: class 
-			where TId: struct 
+		)
+			where TNode: class
+			where TId: struct
 		{
 			var parentStack = new Stack<TNode>();
-			var parent = default(TNode);
-			var prevNode = default(TNode);
+			TNode? parent = null;
+			TNode? prevNode = null;
 			var rootNodes = new List<TNode>();
 
 			foreach (var node in nodes)
@@ -155,13 +156,13 @@ namespace Artisan.Orm
 				{
 					linkParentAndNodeAction(parent, node);
 				}
-				else if (parentId.Equals(idSelector(prevNode)))
+				else if (parentId.Equals(idSelector(prevNode!)))  // prevNode is non-null: set at end of previous iteration
 				{
 					parentStack.Push(parent);
 
 					parent = prevNode;
 
-					linkParentAndNodeAction(parent, node);
+					linkParentAndNodeAction(parent!, node);  // parent = prevNode, non-null (checked above)
 				}
 				else
 				{
@@ -201,7 +202,7 @@ namespace Artisan.Orm
 
 			foreach (var node in dictionary.Select(item => item.Value))
 			{
-				if (node.ParentId.HasValue && dictionary.TryGetValue(node.ParentId.Value, out T parent))
+				if (node.ParentId.HasValue && dictionary.TryGetValue(node.ParentId.Value, out T? parent))
 				{
 					parent.Children ??= new List<T>();
 
@@ -234,7 +235,7 @@ namespace Artisan.Orm
 			{
 				var paretnId = parentIdSelector(node);
 
-				if (paretnId.HasValue && dictionary.TryGetValue(paretnId.Value, out TNode parent))
+				if (paretnId.HasValue && dictionary.TryGetValue(paretnId.Value, out TNode? parent))
 				{
 					linkParentAndNodeAction(parent, node);
 				}

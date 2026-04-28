@@ -1,5 +1,6 @@
 using System;
 using System.Data.SqlTypes;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using Microsoft.Data.SqlClient;
@@ -26,7 +27,8 @@ namespace Artisan.Orm
 			return (T)Convert.ChangeType(reader.GetValue(0), underlyingType);
 		}
 
-		public static T GetValueNullable<T>(this SqlDataReader reader, int ordinal)  
+		[return: MaybeNull]
+		public static T GetValueNullable<T>(this SqlDataReader reader, int ordinal)
 		{
 			if (reader.IsDBNull(ordinal))
 				return default;
@@ -107,7 +109,7 @@ namespace Artisan.Orm
 			return reader.GetCharacter(ordinal);
 		}
 
-		public static string GetStringNullable(this SqlDataReader reader, int ordinal)
+		public static string? GetStringNullable(this SqlDataReader reader, int ordinal)
 		{
 			return reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
 		}
@@ -157,11 +159,11 @@ namespace Artisan.Orm
 			return reader.IsDBNull(ordinal) ? defaultValue : reader.GetGuid(ordinal);
 		}
 
-		public static byte[] GetBytesFromRowVersion(this SqlDataReader reader, int ordinal)
+		public static byte[]? GetBytesFromRowVersion(this SqlDataReader reader, int ordinal)
 		{
 			if (reader.IsDBNull(ordinal))
 				return null;
-		
+
 			return (byte[])reader.GetValue(ordinal);
 		}
 
@@ -178,19 +180,19 @@ namespace Artisan.Orm
 			return BitConverter.ToInt64((byte[])reader.GetValue(ordinal), 0);
 		}
 
-		public static string GetBase64StringFromRowVersion(this SqlDataReader reader, int ordinal)
+		public static string? GetBase64StringFromRowVersion(this SqlDataReader reader, int ordinal)
 		{
 			if (reader.IsDBNull(ordinal))
 				return null;
-		
-			return (Convert.ToBase64String((byte[])reader.GetValue(ordinal)));
+
+			return Convert.ToBase64String((byte[])reader.GetValue(ordinal));
 		}
 
-		public static byte[] GetBytesNullable(this SqlDataReader reader, int ordinal)
+		public static byte[]? GetBytesNullable(this SqlDataReader reader, int ordinal)
 		{
 			if (reader.IsDBNull(ordinal))
 				return null;
-		
+
 			return (byte[])reader.GetValue(ordinal);
 		}
 
@@ -233,9 +235,9 @@ namespace Artisan.Orm
 			return ids.Split(',').Select(s => Convert.ToInt32(s)).ToArray();
 		}
 
-		public static SqlXml GetSqlXmlNullable(this SqlDataReader reader, int ordinal)
+		public static SqlXml? GetSqlXmlNullable(this SqlDataReader reader, int ordinal)
 		{
-			return reader.IsDBNull(ordinal) ? default : reader.GetSqlXml(ordinal);
+			return reader.IsDBNull(ordinal) ? null : reader.GetSqlXml(ordinal);
 		}
 	
 		public static SqlXml GetSqlXml(this SqlDataReader reader, int ordinal, SqlXml defaultValue)

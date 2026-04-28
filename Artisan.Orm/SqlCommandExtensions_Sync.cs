@@ -63,7 +63,7 @@ namespace Artisan.Orm
 				action(dr);
 			}
 
-			return (int)returnValueParam.Value;
+			return (int)returnValueParam.Value!;  // ReturnValueParam() always returns non-null; Value is set by SQL Server
 		}
 
 		#endregion
@@ -71,7 +71,7 @@ namespace Artisan.Orm
 
 		#region [ ReadTo, ReadAs ]
 
-		private static T ReadToValue<T>(this SqlCommand cmd)
+		private static T? ReadToValue<T>(this SqlCommand cmd)
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleRow);
 
@@ -86,16 +86,16 @@ namespace Artisan.Orm
 
 			return default;
 		}
-	
-		public static T ReadTo<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc)
+
+		public static T? ReadTo<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc)
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleRow);
 
 			using var dr = cmd.ExecuteReader(readerFlags);
 			return dr.Read() ? createFunc(dr) : default;
 		}
-	
-		public static T ReadTo<T>(this SqlCommand cmd)
+
+		public static T? ReadTo<T>(this SqlCommand cmd)
 		{
 			if (typeof(T).IsSimpleType())
 				return cmd.ReadToValue<T>();
@@ -103,8 +103,8 @@ namespace Artisan.Orm
 			return cmd.ReadTo(MappingManager.GetCreateObjectFunc<T>());
 		}
 
-	
-		public static T ReadAs<T>(this SqlCommand cmd)
+
+		public static T? ReadAs<T>(this SqlCommand cmd)
 		{
 			if (typeof(T).IsSimpleType())
 				return cmd.ReadToValue<T>();
@@ -115,7 +115,7 @@ namespace Artisan.Orm
 			return dr.Read() ? dr.CreateObject<T>() : default;
 		}
 
-		public static dynamic ReadDynamic(this SqlCommand cmd)
+		public static dynamic? ReadDynamic(this SqlCommand cmd)
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleRow);
 
@@ -129,13 +129,13 @@ namespace Artisan.Orm
 
 		#region [ ReadToList, ReadAsList, ReadToArray, ReadAsArray ]
 
-		private static IList<T> ReadToListOfValues<T>(this SqlCommand cmd, IList<T> list)
+		private static IList<T> ReadToListOfValues<T>(this SqlCommand cmd, IList<T>? list)
 		{
 			list ??= new List<T>();
 
 			var type = typeof(T);
 			var isNullableValueType = type.IsNullableValueType();
-		
+
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleResult);
 
 			using (var dr = cmd.ExecuteReader(readerFlags))
@@ -144,7 +144,7 @@ namespace Artisan.Orm
 				{
 					var underlyingType = type.GetUnderlyingType();
 					while (dr.Read())
-						list.Add(dr.IsDBNull(0) ? default : SqlDataReaderExtensions.GetValue<T>(dr, underlyingType));
+						list.Add(dr.IsDBNull(0) ? default! : SqlDataReaderExtensions.GetValue<T>(dr, underlyingType));  // default! — T is Nullable<X> here, null is valid
 				}
 				else
 				{
@@ -155,8 +155,8 @@ namespace Artisan.Orm
 
 			return list;
 		}
-	
-		private static IList<T> ReadToListOfObjects<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, IList<T> list)
+
+		private static IList<T> ReadToListOfObjects<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, IList<T>? list)
 		{
 			list ??= new List<T>();
 
@@ -170,7 +170,7 @@ namespace Artisan.Orm
 		}
 	
 
-		public static IList<T> ReadToList<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, IList<T> list) 
+		public static IList<T> ReadToList<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, IList<T>? list)
 		{
 			list ??= new List<T>();
 
@@ -178,13 +178,13 @@ namespace Artisan.Orm
 
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleResult);
 
-				using (var dr = cmd.ExecuteReader(readerFlags))
+			using (var dr = cmd.ExecuteReader(readerFlags))
 			{
 				while (dr.Read())
 				{
 					if (isNullableValueType && dr.IsDBNull(0))
-						list.Add(default);
-					else 
+						list.Add(default!);  // default! — T is Nullable<X> here, null is valid
+					else
 						list.Add(createFunc(dr));
 				}
 			}
@@ -200,15 +200,15 @@ namespace Artisan.Orm
 			return cmd.ReadToListOfObjects<T>(createFunc, null);
 		}
 
-		public static IList<T> ReadToList<T>(this SqlCommand cmd, IList<T> list) 
+		public static IList<T> ReadToList<T>(this SqlCommand cmd, IList<T>? list)
 		{
 			if (typeof(T).IsSimpleType())
 				return cmd.ReadToListOfValues<T>(list);
 
 			return cmd.ReadToListOfObjects<T>(MappingManager.GetCreateObjectFunc<T>(), list);
 		}
-	
-		public static IList<T> ReadToList<T>(this SqlCommand cmd) 
+
+		public static IList<T> ReadToList<T>(this SqlCommand cmd)
 		{
 			if (typeof(T).IsSimpleType())
 				return cmd.ReadToListOfValues<T>(null);
@@ -216,7 +216,7 @@ namespace Artisan.Orm
 			return cmd.ReadToListOfObjects<T>(MappingManager.GetCreateObjectFunc<T>(), null);
 		}
 
-		public static IList<dynamic> ReadDynamicList(this SqlCommand cmd, IList<dynamic> list) 
+		public static IList<dynamic> ReadDynamicList(this SqlCommand cmd, IList<dynamic>? list)
 		{
 			list ??= new List<dynamic>();
 
@@ -240,7 +240,7 @@ namespace Artisan.Orm
 			return cmd.ReadDynamicList(null);
 		}
 
-		public static IList<T> ReadAsList<T>(this SqlCommand cmd, IList<T> list)
+		public static IList<T> ReadAsList<T>(this SqlCommand cmd, IList<T>? list)
 		{
 			if (typeof(T).IsSimpleType())
 				return cmd.ReadToListOfValues<T>(list);
@@ -255,7 +255,7 @@ namespace Artisan.Orm
 			return list;
 		}
 
-		public static IList<T> ReadAsList<T>(this SqlCommand cmd) 
+		public static IList<T> ReadAsList<T>(this SqlCommand cmd)
 		{
 			if (typeof(T).IsSimpleType())
 				return cmd.ReadToListOfValues<T>(null);
@@ -289,7 +289,7 @@ namespace Artisan.Orm
 
 		#region [ ReadToEnumerable ]
 	
-		public static IEnumerable<T> ReadToEnumerableValues<T>(this SqlCommand cmd) 
+		public static IEnumerable<T> ReadToEnumerableValues<T>(this SqlCommand cmd)
 		{
 			var type = typeof(T);
 			var isNullableValueType = type.IsNullableValueType();
@@ -306,7 +306,7 @@ namespace Artisan.Orm
 
 					while (dr.Read())
 						if (dr.IsDBNull(0))
-							yield return default;
+							yield return default!;  // default! — T is Nullable<X> here, null is valid
 						else
 							yield return SqlDataReaderExtensions.GetValue<T>(dr, underlyingType);
 				}
@@ -354,7 +354,7 @@ namespace Artisan.Orm
 			return cmd.ReadToEnumerableObjects(MappingManager.GetCreateObjectFunc<T>());
 		}
 	
-		public static IEnumerable<T> ReadToEnumerable<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc) 
+		public static IEnumerable<T> ReadToEnumerable<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc)
 		{
 			var isNullableValueType = typeof(T).IsNullableValueType();
 
@@ -365,10 +365,9 @@ namespace Artisan.Orm
 			if (isNullableValueType)
 				while (dr.Read())
 					if (dr.IsDBNull(0))
-						yield return default;
+						yield return default!;  // default! — T is Nullable<X> here, null is valid
 					else
 						yield return createFunc(dr);
-
 			else
 				while (dr.Read())
 					yield return createFunc(dr);
@@ -388,7 +387,7 @@ namespace Artisan.Orm
 
 		#region [ ReadToObjectRow(s), ReadAsObjectRow(s) ]
 
-		public static ObjectRow ReadToObjectRow(this SqlCommand cmd, Func<SqlDataReader, ObjectRow> createFunc)
+		public static ObjectRow? ReadToObjectRow(this SqlCommand cmd, Func<SqlDataReader, ObjectRow> createFunc)
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleRow);
 
@@ -396,7 +395,7 @@ namespace Artisan.Orm
 			return dr.ReadToObjectRow(createFunc, false);
 		}
 
-		public static ObjectRow ReadToObjectRow<T>(this SqlCommand cmd)
+		public static ObjectRow? ReadToObjectRow<T>(this SqlCommand cmd)
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleRow);
 
@@ -422,7 +421,7 @@ namespace Artisan.Orm
 		}
 
 	
-		public static ObjectRow ReadAsObjectRow(this SqlCommand cmd)
+		public static ObjectRow? ReadAsObjectRow(this SqlCommand cmd)
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleRow);
 
@@ -443,7 +442,7 @@ namespace Artisan.Orm
 
 		#region [ ReadToDictionary, ReadAsDictionary ]
 
-		public static IDictionary<TKey, TValue> ReadToDictionary<TKey, TValue>(this SqlCommand cmd, Func<SqlDataReader, TValue> createFunc) 
+		public static IDictionary<TKey, TValue> ReadToDictionary<TKey, TValue>(this SqlCommand cmd, Func<SqlDataReader, TValue> createFunc) where TKey : notnull
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleResult);
 
@@ -451,15 +450,15 @@ namespace Artisan.Orm
 			return dr.ReadToDictionary<TKey, TValue>(createFunc);
 		}
 
-		public static IDictionary<TKey, TValue> ReadToDictionary<TKey, TValue>(this SqlCommand cmd) 
+		public static IDictionary<TKey, TValue> ReadToDictionary<TKey, TValue>(this SqlCommand cmd) where TKey : notnull
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleResult);
 
 			using var dr = cmd.ExecuteReader(readerFlags);
 			return dr.ReadToDictionary<TKey, TValue>();
 		}
-	
-		public static IDictionary<TKey, TValue> ReadAsDictionary<TKey, TValue>(this SqlCommand cmd) 
+
+		public static IDictionary<TKey, TValue> ReadAsDictionary<TKey, TValue>(this SqlCommand cmd) where TKey : notnull
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleResult);
 
@@ -472,42 +471,42 @@ namespace Artisan.Orm
 
 		#region [ ReadToTree, ReadToTreeList ]
 	
-		public static T ReadToTree<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, IList<T> list, bool hierarchicallySorted = false) where T: class, INode<T>
+		public static T? ReadToTree<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, IList<T>? list, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToListOfObjects<T>(createFunc, list).ToTree(hierarchicallySorted);
 		}
 
-		public static T ReadToTree<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, bool hierarchicallySorted = false) where T: class, INode<T>
+		public static T? ReadToTree<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToEnumerableObjects<T>(createFunc).ToTree(hierarchicallySorted);
 		}
 
-		public static T ReadToTree<T>(this SqlCommand cmd, IList<T> list, bool hierarchicallySorted = false)  where T: class, INode<T>
+		public static T? ReadToTree<T>(this SqlCommand cmd, IList<T>? list, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToListOfObjects<T>(MappingManager.GetCreateObjectFunc<T>(), list).ToTree(hierarchicallySorted);
 		}
-	
-		public static T ReadToTree<T>(this SqlCommand cmd, bool hierarchicallySorted = false) where T: class, INode<T>
+
+		public static T? ReadToTree<T>(this SqlCommand cmd, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToEnumerableObjects<T>(MappingManager.GetCreateObjectFunc<T>()).ToTree(hierarchicallySorted);
 		}
-	
-		public static IList<T> ReadToTreeList<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, IList<T> list, bool hierarchicallySorted = false) where T: class, INode<T>
+
+		public static IList<T> ReadToTreeList<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, IList<T>? list, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToListOfObjects<T>(createFunc, list).ToTreeList(hierarchicallySorted);
 		}
 
-		public static IList<T> ReadToTreeList<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, bool hierarchicallySorted = false) where T: class, INode<T>
+		public static IList<T> ReadToTreeList<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToEnumerableObjects<T>(createFunc).ToTreeList(hierarchicallySorted);
 		}
 
-		public static IList<T> ReadToTreeList<T>(this SqlCommand cmd, IList<T> list, bool hierarchicallySorted = false)  where T: class, INode<T>
+		public static IList<T> ReadToTreeList<T>(this SqlCommand cmd, IList<T>? list, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToListOfObjects<T>(MappingManager.GetCreateObjectFunc<T>(), list).ToTreeList(hierarchicallySorted);
 		}
-	
-		public static IList<T> ReadToTreeList<T>(this SqlCommand cmd, bool hierarchicallySorted = false) where T: class, INode<T>
+
+		public static IList<T> ReadToTreeList<T>(this SqlCommand cmd, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToEnumerableObjects<T>(MappingManager.GetCreateObjectFunc<T>()).ToTreeList(hierarchicallySorted);
 		}

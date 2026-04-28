@@ -9,7 +9,7 @@ namespace Artisan.Orm
 	{
 		public DataReplyStatus Status { get; } = DataReplyStatus.Error;
 
-		public DataReplyMessage[] Messages { get; set; }
+		public DataReplyMessage[]? Messages { get; set; }
 	
 		public DataReplyException() {}
 
@@ -66,7 +66,7 @@ namespace Artisan.Orm
 			{
 				var sb = new StringBuilder();
 
-				foreach (var message in Messages)
+				foreach (var message in Messages ?? Array.Empty<DataReplyMessage>())
 				{
 					if (sb.Length > 0)
 						sb.Append(", ");
@@ -89,7 +89,7 @@ namespace Artisan.Orm
 			}
 		}
 
-		public DataReplyMessage GetDataReplyMessage(string code)
+		public DataReplyMessage? GetDataReplyMessage(string code)
 		{
 			return Messages?.FirstOrDefault(m => m.Code == code);
 		}

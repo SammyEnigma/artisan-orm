@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using static System.String;
 
@@ -11,18 +12,16 @@ namespace Artisan.Orm
 		public DataReplyStatus Status { get; set; }
 
 		[DataMember(EmitDefaultValue = false)]
-		public DataReplyMessage[] Messages { get; set; }
-	
+		public DataReplyMessage[]? Messages { get; set; }
+
 		public DataReply()
 		{
 			Status = DataReplyStatus.Ok;
-			Messages = null;
 		}
 
 		public DataReply(DataReplyStatus status)
 		{
 			Status = status;
-			Messages = null;
 		}
 
 		public DataReply(DataReplyStatus status, string code, string text)
@@ -52,7 +51,7 @@ namespace Artisan.Orm
 			Messages = new [] { new DataReplyMessage { Text = message } };
 		}
 
-		public static DataReplyStatus? ParseStatus (string statusCode)
+		public static DataReplyStatus? ParseStatus (string? statusCode)
 		{
 			if (IsNullOrWhiteSpace(statusCode))
 				return null;
@@ -70,7 +69,9 @@ namespace Artisan.Orm
 	[DataContract]
 	public class DataReply<TData>: DataReply {
 
+		/// <summary>The payload. May be <see langword="null"/> for status-only replies.</summary>
 		[DataMember(EmitDefaultValue = false)]
+		[MaybeNull]
 		public TData Data { get; set; }
 
 		public DataReply(TData data)
@@ -80,37 +81,37 @@ namespace Artisan.Orm
 
 		public DataReply()
 		{
-			Data = default;
+			Data = default!;
 		}
 
-		public DataReply(DataReplyStatus status, string code, string text, TData data)  :base(status, code, text) 
+		public DataReply(DataReplyStatus status, string code, string text, TData data)  :base(status, code, text)
 		{
 			Data = data;
 		}
 
-		public DataReply(DataReplyStatus status, TData data) :base(status) 
+		public DataReply(DataReplyStatus status, TData data) :base(status)
 		{
 			Data = data;
 		}
 
-		public DataReply(DataReplyStatus status) :base(status) 
+		public DataReply(DataReplyStatus status) :base(status)
 		{
-			Data = default;
+			Data = default!;
 		}
 
-		public DataReply(DataReplyStatus status, string code, string text) :base(status, code, text) 
+		public DataReply(DataReplyStatus status, string code, string text) :base(status, code, text)
 		{
-			Data = default;
+			Data = default!;
 		}
 
 		public DataReply(DataReplyStatus status, DataReplyMessage replyMessage) :base(status, replyMessage)
 		{
-			Data = default;
+			Data = default!;
 		}
 
 		public DataReply(DataReplyStatus status, DataReplyMessage[] replyMessages) :base(status, replyMessages)
 		{
-			Data = default;
+			Data = default!;
 		}
 	}
 }

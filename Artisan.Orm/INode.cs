@@ -9,7 +9,7 @@ namespace Artisan.Orm
 
 		int? ParentId { get; set; }
 
-		IList<T> Children { get; set; }
+		IList<T>? Children { get; set; }
 	}
 
 }

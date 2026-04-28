@@ -24,7 +24,7 @@ namespace Artisan.Orm
 			return CreateObject(dr, autoMappingFunc, key);
 		}
 
-		internal static T CreateObject<T>(this SqlDataReader dr, Func<SqlDataReader, T> autoMappingFunc, string key)
+		internal static T CreateObject<T>(this SqlDataReader dr, Func<SqlDataReader, T>? autoMappingFunc, string key)
 		{
 			if (autoMappingFunc == null)
 			{
@@ -38,14 +38,14 @@ namespace Artisan.Orm
 		public static dynamic CreateDynamic(this SqlDataReader dr)
 		{
 			dynamic expando = new ExpandoObject();
-			var dict = expando as IDictionary<string, object>;
-		
+			var dict = (IDictionary<string, object?>)expando;  // ExpandoObject always implements this
+
 			for (var i = 0; i < dr.FieldCount; i++)
 			{
 				var columnName = dr.GetName(i);
 				var value = dr.GetValue(i);
 				dict.Add(columnName, value == DBNull.Value ? null : value);
-			}	
+			}
 
 			return expando;
 		}
@@ -101,17 +101,17 @@ namespace Artisan.Orm
 
 			if (propertyType == fieldType)
 			{
-				if (ReaderGetMethodNames.TryGetValue(underlyingType, out string methodName))
+				if (ReaderGetMethodNames.TryGetValue(underlyingType, out string? methodName))
 					return Expression.Call(
 						sqlDataReaderParam,
-						typeof(SqlDataReader).GetMethod(methodName, new[] { typeof(int) }),
+						typeof(SqlDataReader).GetMethod(methodName, new[] { typeof(int) })!,  // method name from ReaderGetMethodNames, always valid on SqlDataReader
 						indexConst
 					);
 
 				if (underlyingType == typeof(Char))
 					return Expression.Call(
-						null, 
-						typeof(SqlDataReaderExtensions).GetMethod("GetCharacter", new[] { typeof(SqlDataReader), typeof(int) }), 
+						null,
+						typeof(SqlDataReaderExtensions).GetMethod("GetCharacter", new[] { typeof(SqlDataReader), typeof(int) })!,  // static method defined in this class
 						sqlDataReaderParam,
 						indexConst
 					);
@@ -119,12 +119,12 @@ namespace Artisan.Orm
 
 			isDefaultGetValueMethod = true;
 
-			return  Expression.Call(
+			return Expression.Call(
 				null,
-				typeof(Convert).GetMethod("ChangeType", new[] { typeof(object), typeof(Type) }),
+				typeof(Convert).GetMethod("ChangeType", new[] { typeof(object), typeof(Type) })!,  // Convert.ChangeType(object, Type) always exists
 				Expression.Call(
 					sqlDataReaderParam,
-					typeof(SqlDataReader).GetMethod("GetValue", new[] { typeof(int) }),
+					typeof(SqlDataReader).GetMethod("GetValue", new[] { typeof(int) })!,  // SqlDataReader.GetValue(int) always exists
 					indexConst
 				),
 				Expression.Constant(underlyingType, typeof(Type))
@@ -152,14 +152,14 @@ namespace Artisan.Orm
 
 					MethodCallExpression getTypedValueExp = GetTypedValueMethodCallExpression(prop.PropertyType, fieldType, readerParam, indexConst, out bool isDefaultGetValueMethod);
 
-					Expression getValueExp = null;
+					Expression? getValueExp = null;
 
 					if (prop.PropertyType.IsNullableValueType())
 					{
-						getValueExp = Expression.Condition (
+						getValueExp = Expression.Condition(
 							Expression.Call(
 								readerParam,
-								typeof(SqlDataReader).GetMethod("IsDBNull", new[] { typeof(int) }),
+								typeof(SqlDataReader).GetMethod("IsDBNull", new[] { typeof(int) })!,  // SqlDataReader.IsDBNull(int) always exists
 								indexConst
 							),
 		
@@ -177,7 +177,7 @@ namespace Artisan.Orm
 						getValueExp = getTypedValueExp;
 					}
 		
-					var binding = Expression.Bind(prop, getValueExp);
+					var binding = Expression.Bind(prop, getValueExp!);  // set in every branch of the if/else if/else above
 					memberBindings.Add(binding);
 				}
 			}

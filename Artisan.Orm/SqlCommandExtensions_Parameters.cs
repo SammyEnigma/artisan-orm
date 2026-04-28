@@ -356,7 +356,7 @@ namespace Artisan.Orm
 		}
 
 
-		public static void AddVarcharParam(this SqlCommand cmd, string parameterName, int size, string value, bool trimToNull = false, bool truncate = false)
+		public static void AddVarcharParam(this SqlCommand cmd, string parameterName, int size, string? value, bool trimToNull = false, bool truncate = false)
 		{
 			if (value != null)
 			{
@@ -375,11 +375,11 @@ namespace Artisan.Orm
 				Direction = ParameterDirection.Input,
 				SqlDbType = SqlDbType.VarChar,
 				Size = size,
-				Value = (object)value ?? DBNull.Value,
+				Value = (object?)value ?? DBNull.Value,
 			});
 		}
 	
-		public static void AddNVarcharParam(this SqlCommand cmd, string parameterName, int size, string value, bool trimToNull = false, bool truncate = false )
+		public static void AddNVarcharParam(this SqlCommand cmd, string parameterName, int size, string? value, bool trimToNull = false, bool truncate = false)
 		{
 			if (value != null)
 			{
@@ -398,12 +398,12 @@ namespace Artisan.Orm
 				Direction = ParameterDirection.Input,
 				SqlDbType = SqlDbType.NVarChar, 
 				Size = size,
-				Value = (object)value ?? DBNull.Value,
+				Value = (object?)value ?? DBNull.Value,
 			});
 		}
 
 
-		public static void AddVarcharMaxParam(this SqlCommand cmd, string parameterName, string value, bool trimToNull = false) 
+		public static void AddVarcharMaxParam(this SqlCommand cmd, string parameterName, string? value, bool trimToNull = false)
 		{
 			if (trimToNull)
 				value.TrimToNull();
@@ -414,11 +414,11 @@ namespace Artisan.Orm
 				Direction = ParameterDirection.Input,
 				SqlDbType = SqlDbType.VarChar,
 				Size = -1,
-				Value = (object)value ?? DBNull.Value,
+				Value = (object?)value ?? DBNull.Value,
 			});
 		}
 
-		public static void AddNVarcharMaxParam(this SqlCommand cmd, string parameterName, string value, bool trimToNull = false) 
+		public static void AddNVarcharMaxParam(this SqlCommand cmd, string parameterName, string? value, bool trimToNull = false)
 		{
 			if (trimToNull)
 				value.TrimToNull();
@@ -429,12 +429,12 @@ namespace Artisan.Orm
 				Direction = ParameterDirection.Input,
 				SqlDbType = SqlDbType.NVarChar, 
 				Size = -1,
-				Value = (object)value ?? DBNull.Value,
+				Value = (object?)value ?? DBNull.Value,
 			});
 		}
 
 
-		public static void AddBinaryParam(this SqlCommand cmd, string parameterName, int size, byte[] value )
+		public static void AddBinaryParam(this SqlCommand cmd, string parameterName, int size, byte[]? value)
 		{
 			cmd.Parameters.Add( new SqlParameter
 			{ 
@@ -442,11 +442,11 @@ namespace Artisan.Orm
 				Direction = ParameterDirection.Input,
 				SqlDbType = SqlDbType.Binary, 
 				Size = size, 
-				Value = (object)value ?? DBNull.Value
+				Value = (object?)value ?? DBNull.Value
 			});
 		}
 
-		public static void AddVarbinaryParam(this SqlCommand cmd, string parameterName, int size, byte[] value )
+		public static void AddVarbinaryParam(this SqlCommand cmd, string parameterName, int size, byte[]? value)
 		{
 			cmd.Parameters.Add( new SqlParameter
 			{ 
@@ -454,11 +454,11 @@ namespace Artisan.Orm
 				Direction = ParameterDirection.Input,
 				SqlDbType = SqlDbType.VarBinary, 
 				Size = size, 
-				Value = (object)value ?? DBNull.Value
+				Value = (object?)value ?? DBNull.Value
 			});
 		}
 	
-		public static void AddVarbinaryMaxParam(this SqlCommand cmd, string parameterName, byte[] value )
+		public static void AddVarbinaryMaxParam(this SqlCommand cmd, string parameterName, byte[]? value)
 		{
 			cmd.Parameters.Add( new SqlParameter
 			{ 
@@ -466,7 +466,7 @@ namespace Artisan.Orm
 				Direction = ParameterDirection.Input,
 				SqlDbType = SqlDbType.VarBinary, 
 				Size = -1, 
-				Value = (object)value ?? DBNull.Value
+				Value = (object?)value ?? DBNull.Value
 			});
 		}
 
@@ -489,7 +489,7 @@ namespace Artisan.Orm
 				ParameterName = parameterName,
 				Direction = ParameterDirection.Input,
 				SqlDbType = SqlDbType.Date, 
-				Value = (object)value ?? DBNull.Value
+				Value = (object?)value ?? DBNull.Value
 			});
 		}
 	
@@ -512,7 +512,7 @@ namespace Artisan.Orm
 				ParameterName = parameterName,
 				Direction = ParameterDirection.Input,
 				SqlDbType = SqlDbType.Time, 
-				Value = (object)value ?? DBNull.Value
+				Value = (object?)value ?? DBNull.Value
 			});
 		}
 
@@ -535,7 +535,7 @@ namespace Artisan.Orm
 				ParameterName = parameterName,
 				Direction = ParameterDirection.Input,
 				SqlDbType = SqlDbType.SmallDateTime, 
-				Value = (object)value ?? DBNull.Value
+				Value = (object?)value ?? DBNull.Value
 			});
 		}
 	
@@ -558,7 +558,7 @@ namespace Artisan.Orm
 				ParameterName = parameterName,
 				Direction = ParameterDirection.Input,
 				SqlDbType = SqlDbType.DateTime, 
-				Value = (object)value ?? DBNull.Value
+				Value = (object?)value ?? DBNull.Value
 			});
 		}
 	
@@ -581,7 +581,7 @@ namespace Artisan.Orm
 				ParameterName = parameterName,
 				Direction = ParameterDirection.Input,
 				SqlDbType = SqlDbType.DateTime2, 
-				Value = (object)value ?? DBNull.Value
+				Value = (object?)value ?? DBNull.Value
 			});
 		}
 
@@ -604,7 +604,7 @@ namespace Artisan.Orm
 				ParameterName = parameterName,
 				Direction = ParameterDirection.Input,
 				SqlDbType = SqlDbType.DateTimeOffset, 
-				Value = (object)value ?? DBNull.Value
+				Value = (object?)value ?? DBNull.Value
 			});
 		}
 	
@@ -627,7 +627,7 @@ namespace Artisan.Orm
 				ParameterName = parameterName,
 				Direction = ParameterDirection.Input,
 				SqlDbType = SqlDbType.UniqueIdentifier, 
-				Value = (object)value ?? DBNull.Value
+				Value = (object?)value ?? DBNull.Value
 			});
 		}
 
@@ -640,7 +640,7 @@ namespace Artisan.Orm
 				Direction = ParameterDirection.Input,
 				SqlDbType = SqlDbType.Binary, 
 				Size = 8,
-				Value = (object)value ?? DBNull.Value
+				Value = (object?)value ?? DBNull.Value
 			});
 		}
 
@@ -702,12 +702,12 @@ namespace Artisan.Orm
 				ParameterName = parameterName,
 				Direction = ParameterDirection.Input,
 				SqlDbType = SqlDbType.Xml,
-				Value = (object)value ?? DBNull.Value
+				Value = (object?)value ?? DBNull.Value
 			});
 		}
 
 
-		public static void AddTableParam(this SqlCommand cmd, string parameterName, DataTable dataTable)
+		public static void AddTableParam(this SqlCommand cmd, string parameterName, DataTable? dataTable)
 		{
 			if (dataTable == null)
 				return;
@@ -841,7 +841,7 @@ namespace Artisan.Orm
 			if (!cmd.Parameters.Contains("@ReturnValue"))
 				cmd.AddReturnValueParam();
 
-			return cmd.Parameters["@ReturnValue"];
+			return cmd.Parameters["@ReturnValue"]!;  // Contains check above guarantees the parameter is present
 		}
 
 		public static void AddReturnValueParam(this SqlCommand cmd)
@@ -856,7 +856,7 @@ namespace Artisan.Orm
 			cmd.Parameters.Add(returnValueParam);
 		}
 
-		public static SqlParameter GetReturnValueParam(this SqlCommand cmd)
+		public static SqlParameter? GetReturnValueParam(this SqlCommand cmd)
 		{
 			return cmd.Parameters.Contains("@ReturnValue") ? cmd.Parameters["@ReturnValue"] : null;
 		}

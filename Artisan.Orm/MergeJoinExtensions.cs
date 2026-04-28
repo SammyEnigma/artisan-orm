@@ -27,18 +27,20 @@ namespace Artisan.Orm
 		/// </code>
 		/// </example>		
 		public static void MergeJoin<TMaster, TDetail>
-		( 
+		(
 			this IEnumerable<TMaster> masterList,
 
 			IEnumerable<TDetail> detailList,
 			Func<TMaster, TDetail, bool> isMasterDetailLink,
 			Action<TMaster, TDetail> action
-		)	
-			where TMaster :class 
+		)
+			where TMaster :class
 			where TDetail :class
 		{
 			masterList.MergeJoin(null, detailList, isMasterDetailLink, action);
 		}
+
+		// overload with nullable eachMasterAction — called by the no-action variants above
 
 		/// <summary>
 		/// <para>Iterate once for Master and Detail lists, with Action for each Master item.</para>
@@ -63,15 +65,15 @@ namespace Artisan.Orm
 		/// </code>
 		/// </example>		
 		public static void MergeJoin<TMaster, TDetail>
-		( 
+		(
 			this IEnumerable<TMaster> masterList,
-			Action<TMaster> eachMasterAction,
+			Action<TMaster>? eachMasterAction,
 
 			IEnumerable<TDetail> detailList,
 			Func<TMaster, TDetail, bool> isMasterDetailLink,
 			Action<TMaster, TDetail> joinedMasterDetailAction
-		)	
-			where TMaster :class 
+		)
+			where TMaster :class
 			where TDetail :class
 		{
 			var enumerator = detailList.GetEnumerator();
@@ -170,19 +172,19 @@ namespace Artisan.Orm
 		/// </code>
 		/// </example>	
 		public static void MergeJoin<TMaster, TFirstDetail, TSecondDetail>
-		( 
-			this IEnumerable<TMaster> masterList, 
-			Action<TMaster> eachMasterAction,
+		(
+			this IEnumerable<TMaster> masterList,
+			Action<TMaster>? eachMasterAction,
 
-			IEnumerable<TFirstDetail> firstDetailList, 
+			IEnumerable<TFirstDetail> firstDetailList,
 			Func<TMaster, TFirstDetail, bool> isMasterFirstDetailLink,
 			Action<TMaster, TFirstDetail> masterFirstDetailAction,
 
-			IEnumerable<TSecondDetail> secondDetailList, 
+			IEnumerable<TSecondDetail> secondDetailList,
 			Func<TMaster, TSecondDetail, bool> isMasterSecondDetailLink,
 			Action<TMaster, TSecondDetail> masterSecondDetailAction
-		)	
-			where TMaster :class 
+		)
+			where TMaster :class
 			where TFirstDetail :class
 			where TSecondDetail : class
 		{
@@ -292,19 +294,19 @@ namespace Artisan.Orm
 		/// </code>
 		/// </example>	
 		public static void MergeJoin<TMaster, TDetail, TSubDetail>
-		( 
-			this IEnumerable<TMaster> masterList, 
-			Action<TMaster> eachMasterAction,
+		(
+			this IEnumerable<TMaster> masterList,
+			Action<TMaster>? eachMasterAction,
 
-			IEnumerable<TDetail> detailList, 
+			IEnumerable<TDetail> detailList,
 			Func<TMaster, TDetail, bool> isMasterDetailLink,
 			Action<TMaster, TDetail> detailAction,
 
-			IEnumerable<TSubDetail> subDetailList, 
+			IEnumerable<TSubDetail> subDetailList,
 			Func<TDetail, TSubDetail, bool> isDetailSubDetailLink,
 			Action<TDetail, TSubDetail> subDetailAction
-		)	
-			where TMaster :class 
+		)
+			where TMaster :class
 			where TDetail :class
 			where TSubDetail : class
 		{

@@ -18,28 +18,29 @@ namespace Artisan.Orm
 			return dataTable;
 		}
 
-		public static DataTable ToDataTable<T>(this IEnumerable<T> list) 
+		public static DataTable ToDataTable<T>(this IEnumerable<T> list)
 		{
-			if (!MappingManager.GetCreateDataFuncs(out Func<DataTable> createDataTableFunc, out Func<T, object[]> createDataRowFunc))
+			if (!MappingManager.GetCreateDataFuncs(out Func<DataTable>? createDataTableFunc, out Func<T, object[]>? createDataRowFunc))
 				throw new KeyNotFoundException($"No mapping function found to create DataTable and DataRow for type {typeof(T).FullName}");
 
-			var dataTable = createDataTableFunc();
+			// createDataTableFunc/createDataRowFunc are non-null: GetCreateDataFuncs returned true
+			var dataTable = createDataTableFunc!();
 
 			foreach (var entity in list.Where(entity => entity != null))
 			{
-				dataTable.Rows.Add(createDataRowFunc(entity));
+				dataTable.Rows.Add(createDataRowFunc!(entity));
 			}
 
 			return dataTable;
 		}
 
-		public static DataTable ToDataTable<T>(this IEnumerable<T> list, Func<DataTable> getDataTableFunc, Func<T, object[]> convertToDataRowFunc) 
+		public static DataTable ToDataTable<T>(this IEnumerable<T> list, Func<DataTable>? getDataTableFunc, Func<T, object[]>? convertToDataRowFunc)
 		{
-			var dataTable = getDataTableFunc();
+			var dataTable = getDataTableFunc!();
 
 			foreach (var entity in list.Where(entity => entity != null))
 			{
-				dataTable.Rows.Add(convertToDataRowFunc(entity));
+				dataTable.Rows.Add(convertToDataRowFunc!(entity));
 			}
 
 			return dataTable;
@@ -78,21 +79,21 @@ namespace Artisan.Orm
 		}
 	
 
-		public static DataTable AsDataTable<T>(this IEnumerable<T> list, string tableName = null, string columnNames = null) 
+		public static DataTable AsDataTable<T>(this IEnumerable<T> list, string? tableName = null, string? columnNames = null)
 		{
 			var columnNameArray = columnNames?.Split(',', ';').Select(s => s.Trim()).ToArray();
 			return list.AsDataTable(tableName, columnNameArray);
 		}
-	
-		public static DataTable AsDataTable<T>(this IEnumerable<T> list, string tableName, string[] columnNameArray) 
+
+		public static DataTable AsDataTable<T>(this IEnumerable<T> list, string? tableName, string[]? columnNameArray)
 		{
 			if (typeof(T).IsSimpleType())
 				return GetSimpleTypeDataTable(list, tableName, columnNameArray);
-	
+
 			return GetObjectDataTable(list, tableName, columnNameArray);
 		}
-	
-		private static DataTable GetSimpleTypeDataTable<T>(IEnumerable<T> list, string tableName, string[] columnNameArray)
+
+		private static DataTable GetSimpleTypeDataTable<T>(IEnumerable<T> list, string? tableName, string[]? columnNameArray)
 		{
 			var underlyingType = typeof(T).GetUnderlyingType();
 
@@ -112,11 +113,11 @@ namespace Artisan.Orm
 			return dataTable;
 		}
 
-		private static DataTable GetObjectDataTable<T>(IEnumerable<T> list, string tableName, string[] columnNameArray)
+		private static DataTable GetObjectDataTable<T>(IEnumerable<T> list, string? tableName, string[]? columnNameArray)
 		{
 			string key = GetAutoCreateDataFuncsKey<T>(tableName, columnNameArray);
 
-			if (!MappingManager.GetAutoCreateDataFuncs(key, out Func<DataTable> createDataTableFunc, out Func<T, object[]> createDataRowFunc))
+			if (!MappingManager.GetAutoCreateDataFuncs(key, out Func<DataTable>? createDataTableFunc, out Func<T, object[]>? createDataRowFunc))
 			{
 				CreateAutoMappingFunc<T>(tableName, columnNameArray, out createDataTableFunc, out createDataRowFunc);
 
@@ -126,7 +127,7 @@ namespace Artisan.Orm
 			return list.ToDataTable(createDataTableFunc, createDataRowFunc);
 		}
 
-		private static string GetAutoCreateDataFuncsKey<T>(string tableName, string[] columnNameArray)
+		private static string GetAutoCreateDataFuncsKey<T>(string? tableName, string[]? columnNameArray)
 		{
 			var typeFullName = typeof(T).FullName;
 
@@ -137,7 +138,7 @@ namespace Artisan.Orm
 			return $"{typeFullName}{tableNamePart}{columnNames}";
 		}
 
-		private static void CreateAutoMappingFunc<T>(string tableName, string[] columnNameArray, out Func<DataTable> createDataTableFunc, out Func<T, object[]> createDataRowFunc)
+		private static void CreateAutoMappingFunc<T>(string? tableName, string[]? columnNameArray, out Func<DataTable>? createDataTableFunc, out Func<T, object[]>? createDataRowFunc)
 		{ 
 			var bindingFlags = BindingFlags.Public | BindingFlags.Instance ; 
 			var properties = typeof(T).GetProperties(bindingFlags).Where(p => p.PropertyType.IsSimpleType() && p.CanRead).ToList();
@@ -162,10 +163,10 @@ namespace Artisan.Orm
 			createDataRowFunc = GetCreateDataRowFunc<T>(properties);
 		}
 
-		private static Func<DataTable> GetCreateDataTableFunc<T>(string tableName, List<PropertyInfo> properties)
+		private static Func<DataTable> GetCreateDataTableFunc<T>(string? tableName, List<PropertyInfo> properties)
 		{
 			var dataTableCtor = Expression.New(typeof (DataTable));
-			var tableNameProp = typeof (DataTable).GetProperty("TableName");
+			var tableNameProp = typeof(DataTable).GetProperty("TableName")!;  // DataTable.TableName always exists
 			var tableNameConst = Expression.Constant(tableName, typeof (string));
 			var tableNameBinding = Expression.Bind(tableNameProp, tableNameConst);
 			var dataTableInit = Expression.MemberInit(dataTableCtor, tableNameBinding);
@@ -179,11 +180,11 @@ namespace Artisan.Orm
 			{
 				var columnCtor = Expression.New(typeof (DataColumn));
 
-				var columnNameProp = typeof (DataColumn).GetProperty("ColumnName");
+				var columnNameProp = typeof(DataColumn).GetProperty("ColumnName")!;  // DataColumn.ColumnName always exists
 				var columnNameConst = Expression.Constant(property.Name, typeof (string));
 				var columnNameBinding = Expression.Bind(columnNameProp, columnNameConst);
 
-				var columnTypeProp = typeof (DataColumn).GetProperty("DataType");
+				var columnTypeProp = typeof(DataColumn).GetProperty("DataType")!;  // DataColumn.DataType always exists
 				var columnTypeConst = Expression.Constant(property.PropertyType.GetUnderlyingType(), typeof (Type));
 				var columnTypeBinding = Expression.Bind(columnTypeProp, columnTypeConst);
 
@@ -194,10 +195,10 @@ namespace Artisan.Orm
 				addColumnCalls.Add(
 					Expression.Call(
 						columns,
-						typeof (DataColumnCollection).GetMethod("Add", new[] {typeof (DataColumn)}),
+						typeof(DataColumnCollection).GetMethod("Add", new[] { typeof(DataColumn) })!,  // DataColumnCollection.Add(DataColumn) always exists
 						columnInit
-						)
-					);
+					)
+				);
 			}
 
 			BlockExpression addColumnsBlock = Expression.Block(addColumnCalls);
@@ -230,7 +231,7 @@ namespace Artisan.Orm
 
 			foreach (var property in properties)
 			{
-				var getterMethodInfo = property.GetGetMethod();
+				var getterMethodInfo = property.GetGetMethod()!;  // all properties here pass p.CanRead filter
 				var getterCall = Expression.Call(objParam, getterMethodInfo);
 				var castToObject = Expression.Convert(getterCall, typeof(object));
 
