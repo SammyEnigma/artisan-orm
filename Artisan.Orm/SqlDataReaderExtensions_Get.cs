@@ -54,19 +54,39 @@ namespace Artisan.Orm
 			return reader.IsDBNull(ordinal) ? default(byte?) : reader.GetByte(ordinal);
 		}
 
+		public static byte GetByte(this SqlDataReader reader, int ordinal, byte defaultValue)
+		{
+			return reader.IsDBNull(ordinal) ? defaultValue : reader.GetByte(ordinal);
+		}
+
 		public static short? GetInt16Nullable(this SqlDataReader reader, int ordinal)
 		{
 			return reader.IsDBNull(ordinal) ? default(short?) : reader.GetInt16(ordinal);
 		}
-	
+
+		public static short GetInt16(this SqlDataReader reader, int ordinal, short defaultValue)
+		{
+			return reader.IsDBNull(ordinal) ? defaultValue : reader.GetInt16(ordinal);
+		}
+
 		public static int? GetInt32Nullable(this SqlDataReader reader, int ordinal)
 		{
 			return reader.IsDBNull(ordinal) ? default(int?) : reader.GetInt32(ordinal);
 		}
-	
+
+		public static int GetInt32(this SqlDataReader reader, int ordinal, int defaultValue)
+		{
+			return reader.IsDBNull(ordinal) ? defaultValue : reader.GetInt32(ordinal);
+		}
+
 		public static long? GetInt64Nullable(this SqlDataReader reader, int ordinal)
 		{
 			return reader.IsDBNull(ordinal) ? default(long?) : reader.GetInt64(ordinal);
+		}
+
+		public static long GetInt64(this SqlDataReader reader, int ordinal, long defaultValue)
+		{
+			return reader.IsDBNull(ordinal) ? defaultValue : reader.GetInt64(ordinal);
 		}
 
 		public static float? GetFloatNullable(this SqlDataReader reader, int ordinal)
@@ -74,14 +94,29 @@ namespace Artisan.Orm
 			return reader.IsDBNull(ordinal) ? default(float?) : reader.GetFloat(ordinal);
 		}
 
+		public static float GetFloat(this SqlDataReader reader, int ordinal, float defaultValue)
+		{
+			return reader.IsDBNull(ordinal) ? defaultValue : reader.GetFloat(ordinal);
+		}
+
 		public static double? GetDoubleNullable(this SqlDataReader reader, int ordinal)
 		{
 			return reader.IsDBNull(ordinal) ? default(double?) : reader.GetDouble(ordinal);
 		}
 
+		public static double GetDouble(this SqlDataReader reader, int ordinal, double defaultValue)
+		{
+			return reader.IsDBNull(ordinal) ? defaultValue : reader.GetDouble(ordinal);
+		}
+
 		public static decimal? GetDecimalNullable(this SqlDataReader reader, int ordinal)
 		{
 			return reader.IsDBNull(ordinal) ? default(decimal?) : reader.GetDecimal(ordinal);
+		}
+
+		public static decimal GetDecimal(this SqlDataReader reader, int ordinal, decimal defaultValue)
+		{
+			return reader.IsDBNull(ordinal) ? defaultValue : reader.GetDecimal(ordinal);
 		}
 
 		public static decimal GetBigDecimal(this SqlDataReader reader, int ordinal)
@@ -114,9 +149,19 @@ namespace Artisan.Orm
 			return reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
 		}
 
+		public static string GetString(this SqlDataReader reader, int ordinal, string defaultValue)
+		{
+			return reader.IsDBNull(ordinal) ? defaultValue : reader.GetString(ordinal);
+		}
+
 		public static DateTime? GetDateTimeNullable(this SqlDataReader reader, int ordinal)
 		{
 			return reader.IsDBNull(ordinal) ? default(DateTime?) : reader.GetDateTime(ordinal);
+		}
+
+		public static DateTime GetDateTime(this SqlDataReader reader, int ordinal, DateTime defaultValue)
+		{
+			return reader.IsDBNull(ordinal) ? defaultValue : reader.GetDateTime(ordinal);
 		}
 
 		public static DateTimeOffset? GetDateTimeOffsetNullable(this SqlDataReader reader, int ordinal)
@@ -124,14 +169,29 @@ namespace Artisan.Orm
 			return reader.IsDBNull(ordinal) ? default(DateTimeOffset?) : reader.GetDateTimeOffset(ordinal);
 		}
 
+		public static DateTimeOffset GetDateTimeOffset(this SqlDataReader reader, int ordinal, DateTimeOffset defaultValue)
+		{
+			return reader.IsDBNull(ordinal) ? defaultValue : reader.GetDateTimeOffset(ordinal);
+		}
+
 		public static DateTime GetUtcDateTime(this SqlDataReader reader, int ordinal)
 		{
 			return DateTime.SpecifyKind(reader.GetDateTime(ordinal), DateTimeKind.Utc);
 		}
 
+		public static DateTime? GetUtcDateTimeNullable(this SqlDataReader reader, int ordinal)
+		{
+			return reader.IsDBNull(ordinal) ? default(DateTime?) : DateTime.SpecifyKind(reader.GetDateTime(ordinal), DateTimeKind.Utc);
+		}
+
 		public static TimeSpan? GetTimeSpanNullable(this SqlDataReader reader, int ordinal)
 		{
 			return reader.IsDBNull(ordinal) ? default(TimeSpan?) : reader.GetTimeSpan(ordinal);
+		}
+
+		public static TimeSpan GetTimeSpan(this SqlDataReader reader, int ordinal, TimeSpan defaultValue)
+		{
+			return reader.IsDBNull(ordinal) ? defaultValue : reader.GetTimeSpan(ordinal);
 		}
 	
 		public static Guid GetGuidFromString(this SqlDataReader reader, int ordinal)
@@ -239,11 +299,45 @@ namespace Artisan.Orm
 		{
 			return reader.IsDBNull(ordinal) ? null : reader.GetSqlXml(ordinal);
 		}
-	
+
 		public static SqlXml GetSqlXml(this SqlDataReader reader, int ordinal, SqlXml defaultValue)
 		{
 			return reader.IsDBNull(ordinal) ? defaultValue : reader.GetSqlXml(ordinal);
 		}
+
+#if NET6_0_OR_GREATER
+
+		public static DateOnly GetDateOnly(this SqlDataReader reader, int ordinal)
+		{
+			return DateOnly.FromDateTime(reader.GetDateTime(ordinal));
+		}
+
+		public static DateOnly? GetDateOnlyNullable(this SqlDataReader reader, int ordinal)
+		{
+			return reader.IsDBNull(ordinal) ? default(DateOnly?) : DateOnly.FromDateTime(reader.GetDateTime(ordinal));
+		}
+
+		public static DateOnly GetDateOnly(this SqlDataReader reader, int ordinal, DateOnly defaultValue)
+		{
+			return reader.IsDBNull(ordinal) ? defaultValue : DateOnly.FromDateTime(reader.GetDateTime(ordinal));
+		}
+
+		public static TimeOnly GetTimeOnly(this SqlDataReader reader, int ordinal)
+		{
+			return TimeOnly.FromTimeSpan(reader.GetTimeSpan(ordinal));
+		}
+
+		public static TimeOnly? GetTimeOnlyNullable(this SqlDataReader reader, int ordinal)
+		{
+			return reader.IsDBNull(ordinal) ? default(TimeOnly?) : TimeOnly.FromTimeSpan(reader.GetTimeSpan(ordinal));
+		}
+
+		public static TimeOnly GetTimeOnly(this SqlDataReader reader, int ordinal, TimeOnly defaultValue)
+		{
+			return reader.IsDBNull(ordinal) ? defaultValue : TimeOnly.FromTimeSpan(reader.GetTimeSpan(ordinal));
+		}
+
+#endif
 	}
 
 }

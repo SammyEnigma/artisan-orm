@@ -813,27 +813,143 @@ namespace Artisan.Orm
 		}
 
 
-		public static void AddVarcharOutputParam(this SqlCommand cmd, string parameterName, int size )
+		public static void AddBitOutputParam(this SqlCommand cmd, string parameterName)
 		{
-			cmd.Parameters.Add( new SqlParameter
-			{ 
+			cmd.Parameters.Add(new SqlParameter
+			{
 				ParameterName = parameterName,
 				Direction = ParameterDirection.Output,
-				SqlDbType = SqlDbType.VarChar, 
-				Size = size,					
+				SqlDbType = SqlDbType.Bit,
 			});
 		}
 
-		public static void AddNVarcharOutputParam(this SqlCommand cmd, string parameterName, int size )
+		public static void AddTinyIntOutputParam(this SqlCommand cmd, string parameterName)
+		{
+			cmd.Parameters.Add(new SqlParameter
+			{
+				ParameterName = parameterName,
+				Direction = ParameterDirection.Output,
+				SqlDbType = SqlDbType.TinyInt,
+			});
+		}
+
+		public static void AddSmallIntOutputParam(this SqlCommand cmd, string parameterName)
+		{
+			cmd.Parameters.Add(new SqlParameter
+			{
+				ParameterName = parameterName,
+				Direction = ParameterDirection.Output,
+				SqlDbType = SqlDbType.SmallInt,
+			});
+		}
+
+		public static void AddIntOutputParam(this SqlCommand cmd, string parameterName)
+		{
+			cmd.Parameters.Add(new SqlParameter
+			{
+				ParameterName = parameterName,
+				Direction = ParameterDirection.Output,
+				SqlDbType = SqlDbType.Int,
+			});
+		}
+
+		public static void AddBigIntOutputParam(this SqlCommand cmd, string parameterName)
+		{
+			cmd.Parameters.Add(new SqlParameter
+			{
+				ParameterName = parameterName,
+				Direction = ParameterDirection.Output,
+				SqlDbType = SqlDbType.BigInt,
+			});
+		}
+
+		public static void AddDecimalOutputParam(this SqlCommand cmd, string parameterName, byte precision, byte scale)
+		{
+			cmd.Parameters.Add(new SqlParameter
+			{
+				ParameterName = parameterName,
+				Direction = ParameterDirection.Output,
+				SqlDbType = SqlDbType.Decimal,
+				Precision = precision,
+				Scale = scale,
+			});
+		}
+
+		public static void AddGuidOutputParam(this SqlCommand cmd, string parameterName)
+		{
+			cmd.Parameters.Add(new SqlParameter
+			{
+				ParameterName = parameterName,
+				Direction = ParameterDirection.Output,
+				SqlDbType = SqlDbType.UniqueIdentifier,
+			});
+		}
+
+		public static void AddDateTime2OutputParam(this SqlCommand cmd, string parameterName)
+		{
+			cmd.Parameters.Add(new SqlParameter
+			{
+				ParameterName = parameterName,
+				Direction = ParameterDirection.Output,
+				SqlDbType = SqlDbType.DateTime2,
+			});
+		}
+
+		public static void AddDateTimeOffsetOutputParam(this SqlCommand cmd, string parameterName)
+		{
+			cmd.Parameters.Add(new SqlParameter
+			{
+				ParameterName = parameterName,
+				Direction = ParameterDirection.Output,
+				SqlDbType = SqlDbType.DateTimeOffset,
+			});
+		}
+
+		public static void AddVarcharOutputParam(this SqlCommand cmd, string parameterName, int size)
 		{
 			cmd.Parameters.Add( new SqlParameter
-			{ 
+			{
+				ParameterName = parameterName,
+				Direction = ParameterDirection.Output,
+				SqlDbType = SqlDbType.VarChar,
+				Size = size,
+			});
+		}
+
+		public static void AddNVarcharOutputParam(this SqlCommand cmd, string parameterName, int size)
+		{
+			cmd.Parameters.Add( new SqlParameter
+			{
 				ParameterName = parameterName,
 				Direction = ParameterDirection.Output,
 				SqlDbType = SqlDbType.NVarChar,
 				Size = size,
 			});
 		}
+
+#if NET6_0_OR_GREATER
+
+		public static void AddDateParam(this SqlCommand cmd, string parameterName, DateOnly value)
+		{
+			cmd.AddDateParam(parameterName, value.ToDateTime(TimeOnly.MinValue));
+		}
+
+		public static void AddDateParam(this SqlCommand cmd, string parameterName, DateOnly? value)
+		{
+			cmd.AddDateParam(parameterName, value.HasValue ? (DateTime?)value.Value.ToDateTime(TimeOnly.MinValue) : null);
+		}
+
+		public static void AddTimeParam(this SqlCommand cmd, string parameterName, TimeOnly value)
+		{
+			cmd.AddTimeParam(parameterName, value.ToTimeSpan());
+		}
+
+		public static void AddTimeParam(this SqlCommand cmd, string parameterName, TimeOnly? value)
+		{
+			cmd.AddTimeParam(parameterName, value.HasValue ? (TimeSpan?)value.Value.ToTimeSpan() : null);
+		}
+
+#endif
 
 
 		public static SqlParameter ReturnValueParam(this SqlCommand cmd)

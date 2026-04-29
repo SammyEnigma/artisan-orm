@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using Microsoft.Data.SqlClient;
 
 namespace Artisan.Orm
@@ -486,6 +488,119 @@ namespace Artisan.Orm
 	
 		#endregion 
 	
+
+		#region [ ReadToAsyncEnumerable, ReadAsAsyncEnumerable ]
+
+		private static async IAsyncEnumerable<T> ReadToAsyncEnumerableValues<T>(
+			this SqlDataReader dr,
+			[EnumeratorCancellation] CancellationToken ct = default)
+		{
+			var type = typeof(T);
+			var isNullableValueType = type.IsNullableValueType();
+
+			if (isNullableValueType)
+			{
+				var underlyingType = type.GetUnderlyingType();
+				while (await dr.ReadAsync(ct).ConfigureAwait(false))
+					yield return dr.IsDBNull(0) ? default! : GetValue<T>(dr, underlyingType);  // default! — T is Nullable<X> here, null is valid
+			}
+			else
+			{
+				while (await dr.ReadAsync(ct).ConfigureAwait(false))
+					yield return GetValue<T>(dr, type);
+			}
+		}
+
+		private static async IAsyncEnumerable<T> ReadToAsyncEnumerableObjects<T>(
+			this SqlDataReader dr,
+			Func<SqlDataReader, T> createFunc,
+			[EnumeratorCancellation] CancellationToken ct = default)
+		{
+			var isNullableValueType = typeof(T).IsNullableValueType();
+
+			if (isNullableValueType)
+			{
+				while (await dr.ReadAsync(ct).ConfigureAwait(false))
+				{
+					if (dr.IsDBNull(0))
+						yield return default!;  // default! — T is Nullable<X> here, null is valid
+					else
+						yield return createFunc(dr);
+				}
+			}
+			else
+			{
+				while (await dr.ReadAsync(ct).ConfigureAwait(false))
+					yield return createFunc(dr);
+			}
+		}
+
+		private static async IAsyncEnumerable<T> ReadAsAsyncEnumerableObjects<T>(
+			this SqlDataReader dr,
+			[EnumeratorCancellation] CancellationToken ct = default)
+		{
+			var key = GetAutoCreateObjectFuncKey<T>(dr);
+			var autoMappingFunc = MappingManager.GetAutoCreateObjectFunc<T>(key);
+
+			if (autoMappingFunc == null)
+			{
+				autoMappingFunc = CreateAutoMappingFunc<T>(dr);
+				MappingManager.AddAutoCreateObjectFunc(key, autoMappingFunc);
+			}
+
+			while (await dr.ReadAsync(ct).ConfigureAwait(false))
+				yield return autoMappingFunc(dr);
+		}
+
+
+		/// <summary>
+		/// Streams rows from the current result set as an <see cref="IAsyncEnumerable{T}"/>,
+		/// using <paramref name="createFunc"/> to map each row.
+		/// The caller is responsible for the reader's connection lifetime.
+		/// Does <b>not</b> call <c>NextResult</c>.
+		/// </summary>
+		public static IAsyncEnumerable<T> ReadToAsyncEnumerable<T>(
+			this SqlDataReader dr,
+			Func<SqlDataReader, T> createFunc,
+			CancellationToken ct = default)
+		{
+			return dr.ReadToAsyncEnumerableObjects(createFunc, ct);
+		}
+
+		/// <summary>
+		/// Streams rows from the current result set as an <see cref="IAsyncEnumerable{T}"/>,
+		/// using a registered mapping function for <typeparamref name="T"/> (or scalar conversion for simple types).
+		/// The caller is responsible for the reader's connection lifetime.
+		/// Does <b>not</b> call <c>NextResult</c>.
+		/// </summary>
+		public static IAsyncEnumerable<T> ReadToAsyncEnumerable<T>(
+			this SqlDataReader dr,
+			CancellationToken ct = default)
+		{
+			if (typeof(T).IsSimpleType())
+				return dr.ReadToAsyncEnumerableValues<T>(ct);
+
+			return dr.ReadToAsyncEnumerableObjects(MappingManager.GetCreateObjectFunc<T>(), ct);
+		}
+
+		/// <summary>
+		/// Streams rows from the current result set as an <see cref="IAsyncEnumerable{T}"/>,
+		/// using auto-mapping (reflection-based, result cached after first execution).
+		/// The caller is responsible for the reader's connection lifetime.
+		/// Does <b>not</b> call <c>NextResult</c>.
+		/// </summary>
+		public static IAsyncEnumerable<T> ReadAsAsyncEnumerable<T>(
+			this SqlDataReader dr,
+			CancellationToken ct = default)
+		{
+			if (typeof(T).IsSimpleType())
+				return dr.ReadToAsyncEnumerableValues<T>(ct);
+
+			return dr.ReadAsAsyncEnumerableObjects<T>(ct);
+		}
+
+		#endregion
+
 
 		#region [ ReadToTree, ReadToTreeList ]
 
