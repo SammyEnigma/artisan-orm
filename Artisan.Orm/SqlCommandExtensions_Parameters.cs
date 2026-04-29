@@ -952,6 +952,22 @@ namespace Artisan.Orm
 #endif
 
 
+#if NET6_0_OR_GREATER
+
+		/// <summary>
+		/// Serializes <paramref name="value"/> to JSON (via <see cref="System.Text.Json.JsonSerializer"/>)
+		/// and adds it as an <c>nvarchar(max)</c> parameter.
+		/// Passes <c>NULL</c> when <paramref name="value"/> is <c>null</c>.
+		/// </summary>
+		public static void AddJsonParam<T>(this SqlCommand cmd, string parameterName, T? value)
+		{
+			var json = value is null ? null : System.Text.Json.JsonSerializer.Serialize(value);
+			cmd.AddNVarcharMaxParam(parameterName, json);
+		}
+
+#endif
+
+
 		public static SqlParameter ReturnValueParam(this SqlCommand cmd)
 		{
 			if (!cmd.Parameters.Contains("@ReturnValue"))

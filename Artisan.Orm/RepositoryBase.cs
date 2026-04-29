@@ -499,6 +499,73 @@ namespace Artisan.Orm
 			await asyncAction(cmd, cancellationToken).ConfigureAwait(false);
 		}
 
+		#region [ BulkCopy ]
+
+		/// <summary>
+		/// Bulk-inserts <paramref name="rows"/> into <paramref name="destinationTable"/> using a registered mapper.
+		/// Uses the repository's current <see cref="Transaction"/> if one is active.
+		/// Returns the number of rows written.
+		/// </summary>
+		public int BulkCopy<T>(
+			IEnumerable<T> rows,
+			string destinationTable,
+			SqlBulkCopyOptions options = SqlBulkCopyOptions.Default,
+			int batchSize = 0,
+			int timeout = 30)
+		{
+			return Connection!.BulkCopy<T>(rows, destinationTable, Transaction, options, batchSize, timeout);
+		}
+
+		/// <summary>
+		/// Bulk-inserts <paramref name="rows"/> into <paramref name="destinationTable"/> using auto-mapping.
+		/// Uses the repository's current <see cref="Transaction"/> if one is active.
+		/// Returns the number of rows written.
+		/// </summary>
+		public int BulkCopyAs<T>(
+			IEnumerable<T> rows,
+			string destinationTable,
+			SqlBulkCopyOptions options = SqlBulkCopyOptions.Default,
+			int batchSize = 0,
+			int timeout = 30)
+		{
+			return Connection!.BulkCopyAs<T>(rows, destinationTable, Transaction, options, batchSize, timeout);
+		}
+
+		/// <summary>
+		/// Asynchronously bulk-inserts <paramref name="rows"/> into <paramref name="destinationTable"/> using a registered mapper.
+		/// Uses the repository's current <see cref="Transaction"/> if one is active.
+		/// Returns the number of rows written.
+		/// </summary>
+		public Task<int> BulkCopyAsync<T>(
+			IEnumerable<T> rows,
+			string destinationTable,
+			CancellationToken cancellationToken = default,
+			SqlBulkCopyOptions options = SqlBulkCopyOptions.Default,
+			int batchSize = 0,
+			int timeout = 30)
+		{
+			return Connection!.BulkCopyAsync<T>(rows, destinationTable, cancellationToken, Transaction, options, batchSize, timeout);
+		}
+
+		/// <summary>
+		/// Asynchronously bulk-inserts <paramref name="rows"/> into <paramref name="destinationTable"/> using auto-mapping.
+		/// Uses the repository's current <see cref="Transaction"/> if one is active.
+		/// Returns the number of rows written.
+		/// </summary>
+		public Task<int> BulkCopyAsAsync<T>(
+			IEnumerable<T> rows,
+			string destinationTable,
+			CancellationToken cancellationToken = default,
+			SqlBulkCopyOptions options = SqlBulkCopyOptions.Default,
+			int batchSize = 0,
+			int timeout = 30)
+		{
+			return Connection!.BulkCopyAsAsync<T>(rows, destinationTable, cancellationToken, Transaction, options, batchSize, timeout);
+		}
+
+		#endregion
+
+
 		#region [ ReadTo, ReadAs ]
 
 		public T? ReadTo<T>(string sql, params SqlParameter[] sqlParameters)
@@ -624,7 +691,154 @@ namespace Artisan.Orm
 			using var cmd = CreateCommand(sql, action);
 			return await cmd.ReadAsListAsync<T>(cancellationToken).ConfigureAwait(false);
 		}
-	
+
+
+		// --- IList<T>? list overloads (pre-populate an existing list) ---
+
+		public IList<T> ReadToList<T>(string sql, IList<T>? list, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return cmd.ReadToList<T>(list);
+		}
+
+		public IList<T> ReadToList<T>(string sql, IList<T>? list, Action<SqlCommand> action)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return cmd.ReadToList<T>(list);
+		}
+
+		public async Task<IList<T>> ReadToListAsync<T>(string sql, IList<T>? list, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToListAsync<T>(list, cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<IList<T>> ReadToListAsync<T>(string sql, IList<T>? list, Action<SqlCommand> action, CancellationToken cancellationToken = default)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return await cmd.ReadToListAsync<T>(list, cancellationToken).ConfigureAwait(false);
+		}
+
+		public IList<T> ReadAsList<T>(string sql, IList<T>? list, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return cmd.ReadAsList<T>(list);
+		}
+
+		public IList<T> ReadAsList<T>(string sql, IList<T>? list, Action<SqlCommand> action)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return cmd.ReadAsList<T>(list);
+		}
+
+		public async Task<IList<T>> ReadAsListAsync<T>(string sql, IList<T>? list, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadAsListAsync<T>(list, cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<IList<T>> ReadAsListAsync<T>(string sql, IList<T>? list, Action<SqlCommand> action, CancellationToken cancellationToken = default)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return await cmd.ReadAsListAsync<T>(list, cancellationToken).ConfigureAwait(false);
+		}
+
+		#endregion
+
+		#region [ ReadToLists ]
+
+		public (IList<T1>, IList<T2>) ReadToLists<T1, T2>(string sql, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return cmd.ReadToLists<T1, T2>();
+		}
+
+		public (IList<T1>, IList<T2>) ReadToLists<T1, T2>(string sql, Action<SqlCommand> action)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return cmd.ReadToLists<T1, T2>();
+		}
+
+		public async Task<(IList<T1>, IList<T2>)> ReadToListsAsync<T1, T2>(string sql, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToListsAsync<T1, T2>().ConfigureAwait(false);
+		}
+
+		public async Task<(IList<T1>, IList<T2>)> ReadToListsAsync<T1, T2>(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToListsAsync<T1, T2>(cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<(IList<T1>, IList<T2>)> ReadToListsAsync<T1, T2>(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return await cmd.ReadToListsAsync<T1, T2>(cancellationToken).ConfigureAwait(false);
+		}
+
+
+		public (IList<T1>, IList<T2>, IList<T3>) ReadToLists<T1, T2, T3>(string sql, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return cmd.ReadToLists<T1, T2, T3>();
+		}
+
+		public (IList<T1>, IList<T2>, IList<T3>) ReadToLists<T1, T2, T3>(string sql, Action<SqlCommand> action)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return cmd.ReadToLists<T1, T2, T3>();
+		}
+
+		public async Task<(IList<T1>, IList<T2>, IList<T3>)> ReadToListsAsync<T1, T2, T3>(string sql, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToListsAsync<T1, T2, T3>().ConfigureAwait(false);
+		}
+
+		public async Task<(IList<T1>, IList<T2>, IList<T3>)> ReadToListsAsync<T1, T2, T3>(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToListsAsync<T1, T2, T3>(cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<(IList<T1>, IList<T2>, IList<T3>)> ReadToListsAsync<T1, T2, T3>(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return await cmd.ReadToListsAsync<T1, T2, T3>(cancellationToken).ConfigureAwait(false);
+		}
+
+
+		public (IList<T1>, IList<T2>, IList<T3>, IList<T4>) ReadToLists<T1, T2, T3, T4>(string sql, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return cmd.ReadToLists<T1, T2, T3, T4>();
+		}
+
+		public (IList<T1>, IList<T2>, IList<T3>, IList<T4>) ReadToLists<T1, T2, T3, T4>(string sql, Action<SqlCommand> action)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return cmd.ReadToLists<T1, T2, T3, T4>();
+		}
+
+		public async Task<(IList<T1>, IList<T2>, IList<T3>, IList<T4>)> ReadToListsAsync<T1, T2, T3, T4>(string sql, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToListsAsync<T1, T2, T3, T4>().ConfigureAwait(false);
+		}
+
+		public async Task<(IList<T1>, IList<T2>, IList<T3>, IList<T4>)> ReadToListsAsync<T1, T2, T3, T4>(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToListsAsync<T1, T2, T3, T4>(cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<(IList<T1>, IList<T2>, IList<T3>, IList<T4>)> ReadToListsAsync<T1, T2, T3, T4>(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return await cmd.ReadToListsAsync<T1, T2, T3, T4>(cancellationToken).ConfigureAwait(false);
+		}
+
 		#endregion
 
 		#region [ ReadToArray, ReadAsArray ]
