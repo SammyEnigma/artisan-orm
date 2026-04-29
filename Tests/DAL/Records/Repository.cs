@@ -1,8 +1,12 @@
 using System.Collections.Generic;
+using System.Threading;
 using Microsoft.Data.SqlClient;
 using System.Threading.Tasks;
 using Artisan.Orm;
 using Tests.DAL.Records.Models;
+using GrandRecord = Tests.DAL.GrandRecords.Models.GrandRecord;
+using ChildRecord = Tests.DAL.GrandRecords.Models.ChildRecord;
+using RecordType  = Tests.DAL.GrandRecords.Models.RecordType;
 
 namespace Tests.DAL.Records
 {
@@ -291,6 +295,76 @@ namespace Tests.DAL.Records
 			});
 		}
 
+
+		#endregion
+
+
+		#region [ BulkCopy — exercises Connection.BulkCopy / RepositoryBase.BulkCopy* ]
+
+		public int BulkInsertRecords(IList<Record> records)
+		{
+			return BulkCopy(records, "dbo.RecordsBulk");
+		}
+
+		public int BulkInsertRecordsAs(IList<Record> records)
+		{
+			return BulkCopyAs(records, "dbo.RecordsBulk");
+		}
+
+		public Task<int> BulkInsertRecordsAsync(IList<Record> records, CancellationToken ct = default)
+		{
+			return BulkCopyAsync(records, "dbo.RecordsBulk", ct);
+		}
+
+		public Task<int> BulkInsertRecordsAsAsync(IList<Record> records, CancellationToken ct = default)
+		{
+			return BulkCopyAsAsync(records, "dbo.RecordsBulk", ct);
+		}
+
+		public int TruncateRecordsBulk()
+		{
+			return Execute("truncate table dbo.RecordsBulk");
+		}
+
+		public int CountRecordsBulk()
+		{
+			return ReadTo<int>("select count(*) from dbo.RecordsBulk");
+		}
+
+		#endregion
+
+
+		#region [ ReadToLists — exercises ReadToLists<T1, T2[, T3[, T4]]> ]
+
+		public (IList<Record> records, IList<GrandRecord> grandRecords) GetRecordsAndGrandRecords()
+		{
+			return ReadToLists<Record, GrandRecord>("dbo.GetRecordsAndGrandRecords");
+		}
+
+		public Task<(IList<Record>, IList<GrandRecord>)> GetRecordsAndGrandRecordsAsync(CancellationToken ct = default)
+		{
+			return ReadToListsAsync<Record, GrandRecord>("dbo.GetRecordsAndGrandRecords", ct);
+		}
+
+		public (IList<GrandRecord>, IList<Record>, IList<RecordType>) GetThreeListsOfRecords()
+		{
+			return ReadToLists<GrandRecord, Record, RecordType>("dbo.GetThreeListsOfRecords");
+		}
+
+		public Task<(IList<GrandRecord>, IList<Record>, IList<RecordType>)> GetThreeListsOfRecordsAsync(CancellationToken ct = default)
+		{
+			return ReadToListsAsync<GrandRecord, Record, RecordType>("dbo.GetThreeListsOfRecords", ct);
+		}
+
+		public (IList<GrandRecord>, IList<Record>, IList<ChildRecord>, IList<RecordType>) GetFourListsOfRecords()
+		{
+			return ReadToLists<GrandRecord, Record, ChildRecord, RecordType>("dbo.GetFourListsOfRecords");
+		}
+
+		public Task<(IList<GrandRecord>, IList<Record>, IList<ChildRecord>, IList<RecordType>)> GetFourListsOfRecordsAsync(CancellationToken ct = default)
+		{
+			return ReadToListsAsync<GrandRecord, Record, ChildRecord, RecordType>("dbo.GetFourListsOfRecords", ct);
+		}
 
 		#endregion
 

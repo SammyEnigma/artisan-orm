@@ -146,6 +146,13 @@
     <Build Include="5. Procedures\Folders\GetUserRootFolder.sql" />
     <Build Include="5. Procedures\Folders\ReculcSubFolderHids.sql" />
     <Build Include="5. Procedures\Folders\SaveFolder.sql" />
+    <Build Include="1. Tables\Records\5. RecordsBulk.sql" />
+    <Build Include="5. Procedures\SqlParameters\GetOutputParams.sql" />
+    <Build Include="5. Procedures\SqlParameters\GetDateOnlyTimeOnlyParams.sql" />
+    <Build Include="5. Procedures\SqlParameters\GetJsonParam.sql" />
+    <Build Include="5. Procedures\Records\GetRecordsAndGrandRecords.sql" />
+    <Build Include="5. Procedures\Records\GetThreeListsOfRecords.sql" />
+    <Build Include="5. Procedures\Records\GetFourListsOfRecords.sql" />
     <None Include="6. Post-Deployment\1. Users.sql" />
     <None Include="6. Post-Deployment\6. Sequence reset.sql" />
     <None Include="6. Post-Deployment\3. UserRoles.sql" />
