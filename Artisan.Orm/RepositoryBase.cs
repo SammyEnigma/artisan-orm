@@ -313,31 +313,38 @@ namespace Artisan.Orm
 		}
 
 
-		/// <summary> 
-		/// <para/>Prepares SqlCommand and pass it to a Func-parameter.
-		/// <para/>Parameter "func" is the code where SqlCommand has to be configured with parameters, execute reader and return result. 
-		/// </summary>
+		/// <summary>Creates a fresh <see cref="SqlCommand"/>, hands it to <paramref name="func"/>, and returns
+		/// whatever <paramref name="func"/> produces. The command is disposed on exit.</summary>
+		/// <remarks>
+		/// This is the most general entry point: configure the command (<c>UseProcedure</c>/<c>UseSql</c> + <c>AddXxxParam</c>),
+		/// then call <c>cmd.ReadTo&lt;T&gt;()</c> / <c>cmd.ReadToList&lt;T&gt;()</c> / etc. and return the result.
+		/// For one-line calls without parameters, prefer the shortcut overloads on <see cref="RepositoryBase"/>
+		/// such as <see cref="ReadTo{T}(string, SqlParameter[])"/>.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// var users = repo.GetByCommand(cmd =>
+		/// {
+		///     cmd.UseProcedure("dbo.GetUsersByRole");
+		///     cmd.AddTinyIntParam("@RoleId", roleId);
+		///     return cmd.ReadToList<User>();
+		/// });
+		/// ]]></code>
+		/// </example>
 		public T GetByCommand<T>(Func<SqlCommand, T> func)
 		{
 			using var cmd = CreateCommand();
 			return func(cmd);
 		}
 
-		/// <summary> 
-		/// <para/>Prepares SqlCommand and pass it to a Func-parameter.
-		/// <para/>Parameter "func" is the code where SqlCommand has to be configured with parameters, execute reader and return result. 
-		/// </summary>
+		/// <inheritdoc cref="GetByCommand{T}(Func{SqlCommand, T})"/>
 		public async Task<T> GetByCommandAsync<T>(Func<SqlCommand, Task<T>> funcAsync)
 		{
 			using var cmd = CreateCommand();
 			return await funcAsync(cmd).ConfigureAwait(false);
 		}
 
-		/// <summary> 
-		/// <para/>Prepares SqlCommand and pass it to a Func-parameter.
-		/// <para/>Parameter "func" is the code where SqlCommand has to be configured with parameters, execute reader and return result.
-		/// <para/>CancellationToken 
-		/// </summary>
+		/// <inheritdoc cref="GetByCommand{T}(Func{SqlCommand, T})"/>
 		public async Task<T> GetByCommandAsync<T>(Func<SqlCommand, CancellationToken, Task<T>> funcAsync, CancellationToken cancellationToken)
 		{
 			using var cmd = CreateCommand();
@@ -368,12 +375,20 @@ namespace Artisan.Orm
 		}
 
 
-		/// <summary> 
-		/// <para/>Executes SqlCommand which returns nothing but ReturnValue.
-		/// <para/>Calls ExecuteNonQueryAsync inside.
-		/// <para/>Parameter "action" is the code where SqlCommand has to be configured with parameters. 
-		/// <para/>Returns ReturnValue - the value from TSQL "RETURN [Value]" statement. If there is no RETURN in TSQL then returns 0.
-		/// </summary>
+		/// <summary>Creates a command, lets <paramref name="action"/> configure it (procedure name + parameters),
+		/// runs <c>ExecuteNonQuery</c>, and returns the TSQL <c>RETURN</c> value.</summary>
+		/// <remarks>
+		/// <para>Three sibling entry points fire <c>ExecuteNonQuery</c> behind the scenes — pick the one that
+		/// matches what you need:</para>
+		/// <list type="bullet">
+		/// <item><see cref="ExecuteCommand(Action{SqlCommand})"/> — full control over both <c>UseProcedure</c>/<c>UseSql</c>
+		/// and parameters; returns the <c>RETURN</c> value.</item>
+		/// <item><see cref="Execute(string, SqlParameter[])"/> / <see cref="Execute(string, Action{SqlCommand})"/> —
+		/// shortcut: pass the procedure-or-SQL string up front; returns the <c>RETURN</c> value.</item>
+		/// <item><see cref="RunCommand(Action{SqlCommand})"/> — when you don't care about <c>RETURN</c>
+		/// (e.g. raw <c>ExecuteScalar</c>/<c>ExecuteReader</c> inside the lambda); returns nothing.</item>
+		/// </list>
+		/// </remarks>
 		public Int32 ExecuteCommand (Action<SqlCommand> action)
 		{
 			using var cmd = CreateCommand();
@@ -387,6 +402,17 @@ namespace Artisan.Orm
 
 		/// <summary>Executes <paramref name="sql"/> (procedure or text batch) with the given parameters
 		/// and returns the TSQL <c>RETURN</c> value (0 if there was no <c>RETURN</c>).</summary>
+		/// <remarks>See <see cref="ExecuteCommand(Action{SqlCommand})"/> for how this relates to
+		/// <c>ExecuteCommand</c> and <see cref="RunCommand(Action{SqlCommand})"/>.</remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// // Stored procedure that returns 1 / 2 / 0 from RETURN.
+		/// var status = repo.Execute("dbo.DeleteUser", new SqlParameter("@UserId", userId));
+		///
+		/// if (status == 1) throw new InvalidOperationException("User cannot be deleted");
+		/// if (status == 2) throw new KeyNotFoundException("User not found");
+		/// ]]></code>
+		/// </example>
 		public Int32 Execute (string sql, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
@@ -429,12 +455,7 @@ namespace Artisan.Orm
 			return (int) returnValueParam!.Value!;  // AddReturnValueParam() was called before ExecuteCommandAsync, so param is always present
 		}
 	
-		/// <summary> 
-		/// <para/>Executes SqlCommand which returns nothing but ReturnValue.
-		/// <para/>Calls ExecuteNonQueryAsync inside.
-		/// <para/>Parameter "action" is the code where SqlCommand has to be configured with parameters. 
-		/// <para/>Returns ReturnValue - the value from TSQL "RETURN [Value]" statement. If there is no RETURN in TSQL then returns 0.
-		/// </summary>
+		/// <inheritdoc cref="ExecuteCommand(Action{SqlCommand})"/>
 		public async Task<Int32> ExecuteCommandAsync (Action<SqlCommand> action, CancellationToken cancellationToken = default)
 		{
 			using var cmd = CreateCommand();
@@ -476,10 +497,15 @@ namespace Artisan.Orm
 			return await ExecuteCommandAsync(cmd, cancellationToken).ConfigureAwait(false);
 		}
 
-		/// <summary>
-		/// <para>Creates SqlCommand, passes it to Action argument as SqlCommand parameter, returns nothing.</para>
-		/// <para>See GitHub Wiki about this method: <a href="https://github.com/lobodava/artisan-orm/wiki/RepositoryBase-methods-for-SqlCommand-initialization#runcommand">https://github.com/lobodava/artisan-orm/wiki/RepositoryBase-methods-for-SqlCommand-initialization#runcommand</a></para>
-		/// </summary>
+		/// <summary>Creates a fresh <see cref="SqlCommand"/>, hands it to <paramref name="action"/>, and
+		/// disposes it on exit. Returns nothing — use this when you don't need the TSQL <c>RETURN</c> value.</summary>
+		/// <remarks>
+		/// Differs from <see cref="ExecuteCommand(Action{SqlCommand})"/> in two ways: no <c>@ReturnValue</c>
+		/// parameter is added, and the lambda is responsible for opening the connection and calling
+		/// <c>Execute*</c> itself. Useful for <c>ExecuteReader</c>/<c>ExecuteScalar</c> patterns where the
+		/// return value is irrelevant. See also the
+		/// <a href="https://github.com/lobodava/artisan-orm/wiki/RepositoryBase-methods-for-SqlCommand-initialization#runcommand">wiki</a>.
+		/// </remarks>
 		public void RunCommand(Action<SqlCommand> action)
 		{
 			using var cmd = CreateCommand();

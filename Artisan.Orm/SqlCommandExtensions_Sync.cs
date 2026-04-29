@@ -107,6 +107,21 @@ namespace Artisan.Orm
 
 		/// <summary>Reads a single row using the registered mapper for <typeparamref name="T"/>
 		/// (or scalar conversion for simple types). Returns <c>default</c> when the result set is empty.</summary>
+		/// <remarks>
+		/// Use this when you have a hand-written <c>CreateObject</c> mapper marked with
+		/// <c>[MapperFor(typeof(T))]</c> — the mapper is invoked directly with no reflection.
+		/// Use <see cref="ReadAs{T}(SqlCommand)"/> instead when you don't want to write a mapper
+		/// and are happy with reflection-based property-by-name binding (cached after the first call).
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// using var cmd = repo.CreateCommand();
+		/// cmd.UseProcedure("dbo.GetUserById");
+		/// cmd.AddIntParam("@Id", 1);
+		///
+		/// User? user = cmd.ReadTo<User>();
+		/// ]]></code>
+		/// </example>
 		public static T? ReadTo<T>(this SqlCommand cmd)
 		{
 			if (typeof(T).IsSimpleType())
@@ -119,8 +134,24 @@ namespace Artisan.Orm
 		/// <summary>Reads a single row using auto-mapping (reflection-based, cached after first call)
 		/// for <typeparamref name="T"/>, or scalar conversion for simple types.
 		/// Returns <c>default</c> when the result set is empty.</summary>
-		/// <remarks>Use <see cref="ReadTo{T}(SqlCommand)"/> when a registered mapper exists for <typeparamref name="T"/>;
-		/// it skips the reflection step.</remarks>
+		/// <remarks>
+		/// <para>The mapping is built once per (<typeparamref name="T"/>, result-set shape) pair via
+		/// <see cref="System.Linq.Expressions.Expression"/> trees, then cached, so the per-call cost after warmup
+		/// is comparable to a hand-written mapper.</para>
+		/// <para>Prefer <see cref="ReadTo{T}(SqlCommand)"/> when a registered mapper exists for
+		/// <typeparamref name="T"/> — it skips the reflection step entirely and is friendlier to AOT/trimming.</para>
+		/// <para>Column-to-property matching is by name, case-insensitive. Columns without a matching property are ignored.</para>
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// // No [MapperFor] attribute on User needed — columns map to properties by name.
+		/// using var cmd = repo.CreateCommand();
+		/// cmd.UseSql("select Id, Login, Name, Email from dbo.Users where Id = @Id");
+		/// cmd.AddIntParam("@Id", 1);
+		///
+		/// User? user = cmd.ReadAs<User>();
+		/// ]]></code>
+		/// </example>
 		public static T? ReadAs<T>(this SqlCommand cmd)
 		{
 			if (typeof(T).IsSimpleType())
@@ -235,6 +266,16 @@ namespace Artisan.Orm
 
 		/// <summary>Reads all rows of the first result set into a new <see cref="IList{T}"/> using the
 		/// registered mapper for <typeparamref name="T"/> (or scalar conversion for simple types).</summary>
+		/// <remarks>Hand-written mapper path — pairs with <see cref="ReadAsList{T}(SqlCommand)"/>
+		/// (auto-mapping), which is cheaper to introduce but slightly more expensive at warmup.</remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// using var cmd = repo.CreateCommand();
+		/// cmd.UseProcedure("dbo.GetUsers");
+		///
+		/// IList<User> users = cmd.ReadToList<User>();
+		/// ]]></code>
+		/// </example>
 		public static IList<T> ReadToList<T>(this SqlCommand cmd)
 		{
 			if (typeof(T).IsSimpleType())
@@ -289,7 +330,19 @@ namespace Artisan.Orm
 			return list;
 		}
 
-		/// <inheritdoc cref="ReadAsList{T}(SqlCommand, IList{T})"/>
+		/// <summary>Reads all rows of the first result set into a new <see cref="IList{T}"/> using auto-mapping
+		/// (reflection-based, cached after first call).</summary>
+		/// <remarks>Reflection-built mapping is cached per (<typeparamref name="T"/>, column shape), so
+		/// repeated calls with the same SQL run at hand-mapper speed. Prefer <see cref="ReadToList{T}(SqlCommand)"/>
+		/// when a <c>[MapperFor]</c> mapper exists.</remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// using var cmd = repo.CreateCommand();
+		/// cmd.UseSql("select Id, Login, Name, Email from dbo.Users");
+		///
+		/// IList<User> users = cmd.ReadAsList<User>();
+		/// ]]></code>
+		/// </example>
 		public static IList<T> ReadAsList<T>(this SqlCommand cmd)
 		{
 			if (typeof(T).IsSimpleType())

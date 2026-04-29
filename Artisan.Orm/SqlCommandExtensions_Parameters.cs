@@ -1060,6 +1060,34 @@ namespace Artisan.Orm
 		/// and adds it as an <c>nvarchar(max)</c> parameter.
 		/// Passes <c>NULL</c> when <paramref name="value"/> is <c>null</c>.
 		/// </summary>
+		/// <remarks>
+		/// Useful for sending complex object graphs into a stored procedure without defining a TVP for each
+		/// shape. The procedure parses the JSON server-side via <c>OPENJSON</c>. For <c>IEnumerable</c>-typed
+		/// payloads consider <see cref="AddTableParam{T}(SqlCommand, string, IEnumerable{T})"/> instead — TVPs
+		/// avoid the JSON parse cost and let SQL Server check column types at the boundary.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// // C# side
+		/// using var cmd = repo.CreateCommand();
+		/// cmd.UseProcedure("dbo.UpsertUserPreferences");
+		/// cmd.AddIntParam("@UserId", userId);
+		/// cmd.AddJsonParam("@Preferences", new { Theme = "dark", FontSize = 14, Locale = "en-US" });
+		/// cmd.ExecuteNonQuery();
+		///
+		/// // T-SQL side
+		/// // create procedure dbo.UpsertUserPreferences
+		/// //     @UserId      int,
+		/// //     @Preferences nvarchar(max)
+		/// // as begin
+		/// //     declare @Theme nvarchar(50), @FontSize int, @Locale nvarchar(10);
+		/// //     select @Theme = Theme, @FontSize = FontSize, @Locale = Locale
+		/// //     from openjson(@Preferences)
+		/// //     with (Theme nvarchar(50), FontSize int, Locale nvarchar(10));
+		/// //     -- ...upsert...
+		/// // end;
+		/// ]]></code>
+		/// </example>
 		public static void AddJsonParam<T>(this SqlCommand cmd, string parameterName, T? value)
 		{
 			var json = value is null ? null : System.Text.Json.JsonSerializer.Serialize(value);

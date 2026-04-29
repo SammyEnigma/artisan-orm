@@ -69,6 +69,20 @@ namespace Artisan.Orm
 		/// Reads two result sets from a single query into two lists,
 		/// using registered mappers for <typeparamref name="T1"/> and <typeparamref name="T2"/>.
 		/// </summary>
+		/// <remarks>
+		/// Saves a round-trip when you need two related shapes from one stored procedure or batch.
+		/// The first result set must contain rows matching <typeparamref name="T1"/>, the second
+		/// matching <typeparamref name="T2"/>. Use C# tuple deconstruction on the returned value.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// // dbo.GetUsersAndRoles selects from dbo.Users, then from dbo.Roles.
+		/// using var cmd = repo.CreateCommand();
+		/// cmd.UseProcedure("dbo.GetUsersAndRoles");
+		///
+		/// var (users, roles) = cmd.ReadToLists<User, Role>();
+		/// ]]></code>
+		/// </example>
 		public static (IList<T1>, IList<T2>) ReadToLists<T1, T2>(this SqlCommand cmd)
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd);

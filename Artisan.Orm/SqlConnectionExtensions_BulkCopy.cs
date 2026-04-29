@@ -23,6 +23,24 @@ namespace Artisan.Orm
 		/// Opens the connection if it was closed and closes it again on exit.
 		/// Returns the number of rows written.
 		/// </summary>
+		/// <remarks>
+		/// <para>Uses the <c>CreateDataTable</c> / <c>CreateDataRow</c> functions you marked with
+		/// <c>[MapperFor(typeof(T))]</c>, so column names, ordering and SQL types are taken from your code
+		/// and not inferred. Pair with <see cref="BulkCopyAs{T}(SqlConnection, IEnumerable{T}, string, SqlTransaction, SqlBulkCopyOptions, int, int)"/>
+		/// when you don't have (or don't want) a registered mapper.</para>
+		/// <para>Column mappings are added by name, so the registered <see cref="DataTable"/> column order does not
+		/// have to match the SQL table's order.</para>
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// using var conn = new SqlConnection(connectionString);
+		/// var rows = LoadRowsToImport();
+		///
+		/// int written = conn.BulkCopy<Record>(rows, "dbo.Records",
+		///     options: SqlBulkCopyOptions.TableLock,
+		///     batchSize: 5000);
+		/// ]]></code>
+		/// </example>
 		public static int BulkCopy<T>(
 			this SqlConnection conn,
 			IEnumerable<T> rows,
@@ -67,6 +85,13 @@ namespace Artisan.Orm
 		/// Opens the connection if it was closed and closes it again on exit.
 		/// Returns the number of rows written.
 		/// </summary>
+		/// <remarks>
+		/// Reads the public properties of <typeparamref name="T"/> via reflection on the first call and caches
+		/// the resulting mapping. Use this when <typeparamref name="T"/> doesn't have a registered <c>[MapperFor]</c>
+		/// — for example, anonymous-typed projections or import-only DTOs. Switch to
+		/// <see cref="BulkCopy{T}(SqlConnection, IEnumerable{T}, string, SqlTransaction, SqlBulkCopyOptions, int, int)"/>
+		/// when a hand-written mapper is available — slightly faster on first invocation, AOT-friendly.
+		/// </remarks>
 		public static int BulkCopyAs<T>(
 			this SqlConnection conn,
 			IEnumerable<T> rows,
