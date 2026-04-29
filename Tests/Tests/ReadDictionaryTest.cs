@@ -58,12 +58,6 @@ namespace Tests.Tests
 			sw.Start();
 			
 			var dictionary = _repositoryBase.ReadToDictionary<byte, Role>("select * from dbo.Roles");
-				
-			//var dictionary = _repositoryBase.GetByCommand(cmd =>
-			//{
-			//	cmd.UseSql("select * from dbo.Roles");
-			//	return cmd.ReadToDictionary<int, Role>();
-			//});
 
 			sw.Stop();
 
@@ -132,12 +126,6 @@ namespace Tests.Tests
 			sw.Start();
 
 			IDictionary<byte, Role> dictionary = _repositoryBase.ReadAsDictionary<byte, Role>("select * from dbo.Roles");
-
-			//var dictionary = _repositoryBase.GetByCommand(cmd =>
-			//{
-			//	cmd.UseSql("select * from dbo.Roles");
-			//	return cmd.ReadToDictionary<int, Role>();
-			//});
 
 			sw.Stop();
 

@@ -14,11 +14,11 @@ namespace Tests
 			configuration.Bind(this);
 		}
 
-		public ConnectionStrings ConnectionStrings { get; set; }
+		public ConnectionStrings ConnectionStrings { get; set; } = new();
 	}
 
 	public class ConnectionStrings
 	{
-		public string DatabaseConnection { get; set; }
+		public string DatabaseConnection { get; set; } = string.Empty;
 	}
 }

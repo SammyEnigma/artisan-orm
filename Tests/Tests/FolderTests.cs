@@ -648,8 +648,6 @@ namespace Tests.Tests
 
 		private static string ToJson(object obj)
 		{
-			//return JToken.Parse(JsonSerializer.Serialize(obj)).ToString();
-
 			return JsonSerializer.Serialize(obj);
 		}
 

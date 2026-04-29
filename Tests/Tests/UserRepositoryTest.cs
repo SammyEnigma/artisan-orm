@@ -551,13 +551,11 @@ namespace Tests.Tests
 
 
 		
-		//[TestMethod]
-		//public void CheckRuleForUser()
-		//{
-
-		//	_repository.CheckRuleForUser(4);
-
-		//}
+		[TestMethod]
+		public void CheckRuleForUser()
+		{
+			_repository.CheckRuleForUser(4);
+		}
 
 
 

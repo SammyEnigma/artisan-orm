@@ -5,9 +5,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Tests.Tests
 {
 	[TestClass]
-	public class SqlParemeterTest
+	public class SqlParameterTest
 	{
-		private RepositoryBase _repository;
+		private RepositoryBase _repository = null!;
 
 		[TestInitialize]
 		public void TestInitialize()
@@ -74,25 +74,25 @@ namespace Tests.Tests
 
 					reader.Read(r =>
 					{
-						Assert.AreEqual( r.GetBoolean(i++)			,	bit					,	"bit"				);
-						Assert.AreEqual( r.GetBooleanNullable(i++)	,	bitNull				,	"bitNull"			);	
-						Assert.AreEqual( r.GetBooleanNullable(i++)	,	bitNullable			,	"bitNullable"		);	
+						Assert.AreEqual(bit, r.GetBoolean(i++), "bit");
+						Assert.AreEqual(bitNull, r.GetBooleanNullable(i++), "bitNull");	
+						Assert.AreEqual(bitNullable, r.GetBooleanNullable(i++), "bitNullable");	
 
-						Assert.AreEqual( r.GetByte(i++)				,	tinyInt				,	"tinyInt"			);	
-						Assert.AreEqual( r.GetByteNullable(i++)		,	tinyIntNull			,	"tinyIntNull"		);	
-						Assert.AreEqual( r.GetByteNullable(i++)		,	tinyIntNullable		,	"tinyIntNullable"	);	
+						Assert.AreEqual(tinyInt, r.GetByte(i++), "tinyInt");	
+						Assert.AreEqual(tinyIntNull, r.GetByteNullable(i++), "tinyIntNull");	
+						Assert.AreEqual(tinyIntNullable, r.GetByteNullable(i++), "tinyIntNullable");	
 
-						Assert.AreEqual( r.GetInt16(i++)			,	smallInt			,	"smallInt"			);	
-						Assert.AreEqual( r.GetInt16Nullable(i++)	,	smallIntNull		,	"smallIntNull"		);	
-						Assert.AreEqual( r.GetInt16Nullable(i++)	,	smallIntNullable	,	"smallIntNullable"	);
+						Assert.AreEqual(smallInt, r.GetInt16(i++), "smallInt");	
+						Assert.AreEqual(smallIntNull, r.GetInt16Nullable(i++), "smallIntNull");	
+						Assert.AreEqual(smallIntNullable, r.GetInt16Nullable(i++), "smallIntNullable");
 
-						Assert.AreEqual( r.GetInt32(i++)			,	int_				,	"int_"				);	
-						Assert.AreEqual( r.GetInt32Nullable(i++)	,	intNull				,	"intNull"			);	
-						Assert.AreEqual( r.GetInt32Nullable(i++)	,	intNullable			,	"intNullable"		);	
+						Assert.AreEqual(int_, r.GetInt32(i++), "int_");	
+						Assert.AreEqual(intNull, r.GetInt32Nullable(i++), "intNull");	
+						Assert.AreEqual(intNullable, r.GetInt32Nullable(i++), "intNullable");	
 
-						Assert.AreEqual( r.GetInt64(i++)			,	bigInt				,	"bigInt"			);	
-						Assert.AreEqual( r.GetInt64Nullable(i++)	,	bigIntNull			,	"bigIntNull"		);	
-						Assert.AreEqual( r.GetInt64Nullable(i++)	,	bigIntNullable		,	"bigIntNullable"	);
+						Assert.AreEqual(bigInt, r.GetInt64(i++), "bigInt");	
+						Assert.AreEqual(bigIntNull, r.GetInt64Nullable(i++), "bigIntNull");	
+						Assert.AreEqual(bigIntNullable, r.GetInt64Nullable(i++), "bigIntNullable");
 
 					});
 
@@ -158,25 +158,25 @@ namespace Tests.Tests
 
 					reader.Read(r =>
 					{
-						Assert.AreEqual( r.GetDecimal(i++)			,	decimal_			,	"decimal_"			);	
-						Assert.AreEqual( r.GetDecimalNullable(i++)	,	decimalNull			,	"decimalNull"		);	
-						Assert.AreEqual( r.GetDecimalNullable(i++)	,	decimalNullable		,	"decimalNullable"	);	
+						Assert.AreEqual(decimal_, r.GetDecimal(i++), "decimal_");	
+						Assert.AreEqual(decimalNull, r.GetDecimalNullable(i++), "decimalNull");	
+						Assert.AreEqual(decimalNullable, r.GetDecimalNullable(i++), "decimalNullable");	
 
-						Assert.AreEqual( r.GetDecimal(i++)			,	smallMoney			,	"smallMoney"		);	
-						Assert.AreEqual( r.GetDecimalNullable(i++)	,	smallMoneyNull		,	"smallMoneyNull"	);	
-						Assert.AreEqual( r.GetDecimalNullable(i++)	,	smallMoneyNullable	,	"smallMoneyNullable");	
+						Assert.AreEqual(smallMoney, r.GetDecimal(i++), "smallMoney");	
+						Assert.AreEqual(smallMoneyNull, r.GetDecimalNullable(i++), "smallMoneyNull");	
+						Assert.AreEqual(smallMoneyNullable, r.GetDecimalNullable(i++), "smallMoneyNullable");	
 
-						Assert.AreEqual( r.GetDecimal(i++)			,	money				,	"money"				);	
-						Assert.AreEqual( r.GetDecimalNullable(i++)	,	moneyNull			,	"moneyNull"			);	
-						Assert.AreEqual( r.GetDecimalNullable(i++)	,	moneyNullable		,	"moneyNullable"		);	
+						Assert.AreEqual(money, r.GetDecimal(i++), "money");	
+						Assert.AreEqual(moneyNull, r.GetDecimalNullable(i++), "moneyNull");	
+						Assert.AreEqual(moneyNullable, r.GetDecimalNullable(i++), "moneyNullable");	
 
-						Assert.AreEqual( r.GetFloat(i++)			,	real				,	"real"				);	
-						Assert.AreEqual( r.GetFloatNullable(i++)	,	realNull			,	"realNull"			);	
-						Assert.AreEqual( r.GetFloatNullable(i++)	,	realNullable		,	"realNullable"		);	
+						Assert.AreEqual(real, r.GetFloat(i++), "real");	
+						Assert.AreEqual(realNull, r.GetFloatNullable(i++), "realNull");	
+						Assert.AreEqual(realNullable, r.GetFloatNullable(i++), "realNullable");	
 
-						Assert.AreEqual( r.GetDouble(i++)			,	float_				,	"float_"			);	
-						Assert.AreEqual( r.GetDoubleNullable(i++)	,	floatNull			,	"floatNull"			);	
-						Assert.AreEqual( r.GetDoubleNullable(i++)	,	floatNullable		,	"floatNullable"		);
+						Assert.AreEqual(float_, r.GetDouble(i++), "float_");	
+						Assert.AreEqual(floatNull, r.GetDoubleNullable(i++), "floatNull");	
+						Assert.AreEqual(floatNullable, r.GetDoubleNullable(i++), "floatNullable");
 
 					});
 
@@ -242,25 +242,25 @@ namespace Tests.Tests
 
 					reader.Read(r =>
 					{
-						Assert.AreEqual( r.GetCharacter(i++)		,	char_			,	"char_"				);	
-						Assert.AreEqual( r.GetCharacterNullable(i++),	charNull		,	"charNull"			);	
-						Assert.AreEqual( r.GetCharacterNullable(i++),	charNullable	,	"charNullable"		);	
+						Assert.AreEqual(char_, r.GetCharacter(i++), "char_");	
+						Assert.AreEqual(charNull, r.GetCharacterNullable(i++), "charNull");	
+						Assert.AreEqual(charNullable, r.GetCharacterNullable(i++), "charNullable");	
 
-						Assert.AreEqual( r.GetCharacter(i++)		,	nchar			,	"nchar"				);	
-						Assert.AreEqual( r.GetCharacterNullable(i++),	ncharNull		,	"ncharNull"			);	
-						Assert.AreEqual( r.GetCharacterNullable(i++),	ncharNullable	,	"ncharNullable"		);	
+						Assert.AreEqual(nchar, r.GetCharacter(i++), "nchar");	
+						Assert.AreEqual(ncharNull, r.GetCharacterNullable(i++), "ncharNull");	
+						Assert.AreEqual(ncharNullable, r.GetCharacterNullable(i++), "ncharNullable");	
 
-						Assert.AreEqual( r.GetString(i++)			,	varchar			,	"varchar"			);	
-						Assert.AreEqual( r.GetStringNullable(i++)	,	varcharNull		,	"varcharNull"		);	
+						Assert.AreEqual(varchar, r.GetString(i++), "varchar");	
+						Assert.AreEqual(varcharNull, r.GetStringNullable(i++), "varcharNull");	
 
-						Assert.AreEqual( r.GetString(i++)			,	nvarchar		,	"nvarchar"			);	
-						Assert.AreEqual( r.GetStringNullable(i++)	,	nvarcharNull	,	"nvarcharNull"		);	
+						Assert.AreEqual(nvarchar, r.GetString(i++), "nvarchar");	
+						Assert.AreEqual(nvarcharNull, r.GetStringNullable(i++), "nvarcharNull");	
 
-						Assert.AreEqual( r.GetString(i++)			,	varcharmax		,	"varcharmax"		);	
-						Assert.AreEqual( r.GetStringNullable(i++)	,	varcharmaxNull	,	"varcharmaxNull"	);
+						Assert.AreEqual(varcharmax, r.GetString(i++), "varcharmax");	
+						Assert.AreEqual(varcharmaxNull, r.GetStringNullable(i++), "varcharmaxNull");
 
-						Assert.AreEqual( r.GetString(i++)			,	nvarcharmax		,	"nvarcharmax"		);	
-						Assert.AreEqual( r.GetStringNullable(i++)	,	nvarcharmaxNull ,	"nvarcharmaxNull"	);
+						Assert.AreEqual(nvarcharmax, r.GetString(i++), "nvarcharmax");	
+						Assert.AreEqual(nvarcharmaxNull, r.GetStringNullable(i++), "nvarcharmaxNull");
 
 					});
 
@@ -343,29 +343,29 @@ namespace Tests.Tests
 
 					reader.Read(r =>
 					{
-						Assert.AreEqual( r.GetDateTime(i++)					,	date					, "date"					);
-						Assert.AreEqual( r.GetDateTimeNullable(i++)			,	dateNull				, "dateNull"				);
-						Assert.AreEqual( r.GetDateTimeNullable(i++)			,	dateNullable			, "dateNullable"			);
+						Assert.AreEqual(date, r.GetDateTime(i++), "date");
+						Assert.AreEqual(dateNull, r.GetDateTimeNullable(i++), "dateNull");
+						Assert.AreEqual(dateNullable, r.GetDateTimeNullable(i++), "dateNullable");
 
-						Assert.AreEqual( r.GetTimeSpan(i++)					,	time					, "time"					);
-						Assert.AreEqual( r.GetTimeSpanNullable(i++)			,	timeTimeNull			, "timeTimeNull"			);
-						Assert.AreEqual( r.GetTimeSpanNullable(i++)			,	timeTimeNullable		, "timeTimeNullable"		);
+						Assert.AreEqual(time, r.GetTimeSpan(i++), "time");
+						Assert.AreEqual(timeTimeNull, r.GetTimeSpanNullable(i++), "timeTimeNull");
+						Assert.AreEqual(timeTimeNullable, r.GetTimeSpanNullable(i++), "timeTimeNullable");
 
-						Assert.AreEqual( r.GetDateTime(i++)					,	smallDateTime			, "smallDateTime"			);
-						Assert.AreEqual( r.GetDateTimeNullable(i++)			,	smallDateTimeNull		, "smallDateTimeNull"		);
-						Assert.AreEqual( r.GetDateTimeNullable(i++)			,	smallDateTimeNullable	, "smallDateTimeNullable"	);
+						Assert.AreEqual(smallDateTime, r.GetDateTime(i++), "smallDateTime");
+						Assert.AreEqual(smallDateTimeNull, r.GetDateTimeNullable(i++), "smallDateTimeNull");
+						Assert.AreEqual(smallDateTimeNullable, r.GetDateTimeNullable(i++), "smallDateTimeNullable");
 
-						Assert.AreEqual(  r.GetDateTime(i++)				,	dateTime				, "dateTime"				);
-						Assert.AreEqual(  r.GetDateTimeNullable(i++)		,	dateTimeNull			, "dateTimeNull"			);
-						Assert.AreEqual(  r.GetDateTimeNullable(i++)		,	dateTimeNullable.Value	, "dateTimeNullable"		);
+						Assert.AreEqual(dateTime, r.GetDateTime(i++), "dateTime");
+						Assert.AreEqual(dateTimeNull, r.GetDateTimeNullable(i++), "dateTimeNull");
+						Assert.AreEqual(dateTimeNullable.Value, r.GetDateTimeNullable(i++), "dateTimeNullable");
 
-						Assert.AreEqual( r.GetDateTime(i++)					,	dateTime2				, "dateTime2"				);
-						Assert.AreEqual( r.GetDateTimeNullable(i++)			,	dateTime2Null			, "dateTime2Null"			);
-						Assert.AreEqual( r.GetDateTimeNullable(i++)			,	dateTime2Nullable		, "dateTime2Nullable"		);
+						Assert.AreEqual(dateTime2, r.GetDateTime(i++), "dateTime2");
+						Assert.AreEqual(dateTime2Null, r.GetDateTimeNullable(i++), "dateTime2Null");
+						Assert.AreEqual(dateTime2Nullable, r.GetDateTimeNullable(i++), "dateTime2Nullable");
 
-						Assert.AreEqual( r.GetDateTimeOffset(i++)			,	dateTimeOffset			, "dateTimeOffset"			);	
-						Assert.AreEqual( r.GetDateTimeOffsetNullable(i++)	,	dateTimeOffsetNull		, "dateTimeOffsetNull"		);	
-						Assert.AreEqual( r.GetDateTimeOffsetNullable(i++)	,	dateTimeOffsetNullable	, "dateTimeOffsetNullable"	);
+						Assert.AreEqual(dateTimeOffset, r.GetDateTimeOffset(i++), "dateTimeOffset");	
+						Assert.AreEqual(dateTimeOffsetNull, r.GetDateTimeOffsetNullable(i++), "dateTimeOffsetNull");	
+						Assert.AreEqual(dateTimeOffsetNullable, r.GetDateTimeOffsetNullable(i++), "dateTimeOffsetNullable");
 
 					});
 
@@ -420,19 +420,19 @@ namespace Tests.Tests
 
 					reader.Read(r =>
 					{
-						Assert.AreEqual( r.GetGuid(i++)							,	guid					,	"guid"						);
-						Assert.AreEqual( r.GetGuidNullable(i++)					,	guidNull				,	"guidNull"					);
-						Assert.AreEqual( r.GetGuidNullable(i++)					,	guidNullable			,	"guidNullable"				);
+						Assert.AreEqual(guid, r.GetGuid(i++), "guid");
+						Assert.AreEqual(guidNull, r.GetGuidNullable(i++), "guidNull");
+						Assert.AreEqual(guidNullable, r.GetGuidNullable(i++), "guidNullable");
 						
-			  CollectionAssert.AreEqual( r.GetBytesFromRowVersion(i++)			,	rowVersion				,	"rowVersion"				);
-			  CollectionAssert.AreEqual( r.GetBytesFromRowVersion(i++)			,	rowVersionNull			,	"rowVersionNull"			);
+			  CollectionAssert.AreEqual(rowVersion, r.GetBytesFromRowVersion(i++), "rowVersion");
+			  CollectionAssert.AreEqual(rowVersionNull, r.GetBytesFromRowVersion(i++), "rowVersionNull");
 						
-						Assert.AreEqual( r.GetInt64FromRowVersion(i++)			,	rowVersionInt64			,	"rowVersionInt64"			);
-						Assert.AreEqual( r.GetInt64FromRowVersionNullable(i++)	,	rowVersionInt64Null		,	"rowVersionInt64Null"		);
-						Assert.AreEqual( r.GetInt64FromRowVersionNullable(i++)	,	rowVersionInt64Nullable	,	"rowVersionInt64Nullable"	);
+						Assert.AreEqual(rowVersionInt64, r.GetInt64FromRowVersion(i++), "rowVersionInt64");
+						Assert.AreEqual(rowVersionInt64Null, r.GetInt64FromRowVersionNullable(i++), "rowVersionInt64Null");
+						Assert.AreEqual(rowVersionInt64Nullable, r.GetInt64FromRowVersionNullable(i++), "rowVersionInt64Nullable");
 						
-						Assert.AreEqual( r.GetBase64StringFromRowVersion(i++)	,	rowVersionBase64		,	"rowVersionBase64"			);
-						Assert.AreEqual( r.GetBase64StringFromRowVersion(i++)	,	rowVersionBase64Null	,	"rowVersionBase64Null"		);
+						Assert.AreEqual(rowVersionBase64, r.GetBase64StringFromRowVersion(i++), "rowVersionBase64");
+						Assert.AreEqual(rowVersionBase64Null, r.GetBase64StringFromRowVersion(i++), "rowVersionBase64Null");
 
 						Console.WriteLine($"Byte[8]: [{string.Join(",", r.GetBytesFromRowVersion(i))}]");
 						Console.WriteLine($"Int64: {r.GetInt64FromRowVersion(i)}");
@@ -479,7 +479,7 @@ namespace Tests.Tests
 
 				cmd.AddTableRowParam("@Numbers", (byte)123);
 				
-				Assert.AreEqual(cmd.ReadTo<byte>(), 123);
+				Assert.AreEqual(123, cmd.ReadTo<byte>());
 			});
 		}
 
@@ -516,7 +516,7 @@ namespace Tests.Tests
 
 				cmd.AddTableRowParam("@Numbers", (short)123);
 				
-				Assert.AreEqual(cmd.ReadTo<short>(), 123);
+				Assert.AreEqual(123, cmd.ReadTo<short>());
 			});
 		}
 
@@ -556,7 +556,7 @@ namespace Tests.Tests
 
 				cmd.AddTableRowParam("@Numbers", 123);
 				
-				Assert.AreEqual(cmd.ReadTo<int>(), 123);
+				Assert.AreEqual(123, cmd.ReadTo<int>());
 			});
 		}
 
@@ -612,7 +612,7 @@ namespace Tests.Tests
 
 			dt = aList.AsDataTable();
 
-			Assert.AreEqual(dt.TableName, "");
+			Assert.AreEqual("", dt.TableName);
 			Assert.AreEqual(aList.First().Id, (int)dt.Rows[0]["Id"]);
 			Assert.AreEqual(aList.First().Name, dt.Rows[0]["Name"].ToString());
 			Assert.AreEqual(aList.Last().Id, (int)dt.Rows[1]["Id"]);
@@ -621,8 +621,8 @@ namespace Tests.Tests
 			var numbers = new int[] {1,3,5,7,11,13};
 
 			dt = numbers.AsDataTable();
-			Assert.AreEqual(dt.TableName, "");
-			Assert.AreEqual(dt.Columns[0].ColumnName, "Int32");
+			Assert.AreEqual("", dt.TableName);
+			Assert.AreEqual("Int32", dt.Columns[0].ColumnName);
 
 		}
 

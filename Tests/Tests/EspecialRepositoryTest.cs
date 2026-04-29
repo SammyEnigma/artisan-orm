@@ -62,38 +62,6 @@ namespace Tests.Tests
 
 		}
 
-		//[TestMethod]
-		//public void GetNumb()
-		//{
-		//	_repositoryBase.Connection.Open();
-			
-		//	var sw = new Stopwatch();
-		//	sw.Start();
-		
-		//	for (var i = 1; i <= 100000; i++)
-		//	{
-		//		_repositoryBase.RunCommand(cmd =>
-		//		{
-		//			cmd.UseSql("select Numb = cast(0 as int);");
-
-		//			var numb = cmd.GetByReader(reader => 
-		//			{
-		//				return reader.ReadTo(r => r.GetInt32Nullable(0));
-		//			});
-
-		//		});
-				
-		//	}
-
-		//	sw.Stop();
-
-		//	_repositoryBase.Connection.Close();
-
-		//	Console.WriteLine($"Numb {sw.Elapsed.TotalMilliseconds.ToString("0.####")} ms ");
-
-		//}
-
-
 		[TestMethod]
 		public void GetInt32VsGetValueVsChangeType()
 		{
@@ -366,51 +334,6 @@ namespace Tests.Tests
 			Console.WriteLine("Nullable XmlValue is null");
 			Console.WriteLine(JsonSerializer.Serialize(xmlValue));
 		}
-
-		//[TestMethod]
-		//public void TryCatchPerformanceCost()
-		//{
-		//	Stopwatch sw = new Stopwatch();
-		//	double d = 0;
-		//	int times = 10000000;
-
-		//	for (int i = 0; i < times; i++)
-		//	{
-		//		d = Math.Sin(1);
-		//	}
-
-
-		//	sw.Start();
-
-		//	for (int i = 0; i < times; i++)
-		//	{
-		//		d = Math.Sin(1);
-		//	}
-
-		//	sw.Stop();
-
-		//	Console.WriteLine($"Without try-catch done {times} times for {sw.Elapsed.TotalMilliseconds.ToString("0.##")} ms, or {(sw.Elapsed.TotalMilliseconds / times).ToString("0.########")} ms for one loop" );
-		//	Console.WriteLine();
-			
-		//	sw.Restart();
-
-		//	for (int i = 0; i < times; i++)
-		//	{
-		//		try
-		//		{
-		//			d = Math.Sin(1);
-		//		}
-		//		catch (Exception ex)
-		//		{
-		//			Console.WriteLine(ex.ToString());
-		//		}
-		//	}
-
-		//	sw.Stop();
-
-		//	Console.WriteLine($"With try-catch done {times} times for {sw.Elapsed.TotalMilliseconds.ToString("0.##")} ms, or {(sw.Elapsed.TotalMilliseconds / times).ToString("0.########")} ms for one loop" );
-		//	Console.WriteLine();
-		//}
 
 		[TestCleanup]
 		public void Dispose()

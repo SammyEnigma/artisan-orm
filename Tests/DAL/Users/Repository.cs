@@ -324,42 +324,6 @@ public class Repository: RepositoryBase
 		});
 	}
 
-
-
-	//	if to call this method like
-	//		await _repository.DeleteUserAsyncException(1);
-	//	it does not throw exception 
-	//
-	//public async Task DeleteUserAsyncException(Int32 userId)
-	//{
-	//	await RunCommandAsync(async cmd =>
-	//	{
-	//		cmd.UseProcedure("dbo.DeleteUser");
-	//		cmd.AddIntParam("@UserId", userId);
-
-		  
-	//		var returnValueParam = cmd.ReturnValueParam();
-
-	//		try
-	//		{
-	//			cmd.Connection.Open();
-
-	//			await cmd.ExecuteNonQueryAsync();
-	//		}
-	//		finally
-	//		{
-	//			cmd.Connection.Close();
-	//		}
-
-	//		int returnValue = (int)returnValueParam.Value;
-
-	//		if (returnValue == 1)
-	//			throw new DataValidationException("UNDELETABLE", "Heros can not be deleted");
-
-	//	});
-	//}
-
-
 	#endregion
 
 }
