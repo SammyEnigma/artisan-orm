@@ -420,14 +420,14 @@ namespace Artisan.Orm
 				isConnectionClosed = cmd.Connection.State == ConnectionState.Closed;
 
 				if (isConnectionClosed)
-					cmd.Connection.Open();
+					await cmd.Connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
 				await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 			}
 			finally
 			{
 				if (isConnectionClosed)
-					cmd.Connection.Close();
+					await cmd.Connection.CloseAsync().ConfigureAwait(false);
 			}
 
 			return (int) returnValueParam!.Value!;  // AddReturnValueParam() was called before ExecuteCommandAsync, so param is always present
@@ -457,6 +457,15 @@ namespace Artisan.Orm
 			cmd.AddReturnValueParam();
 
 			return await ExecuteCommandAsync(cmd).ConfigureAwait(false);
+		}
+
+		public async Task<Int32> ExecuteAsync (string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+
+			cmd.AddReturnValueParam();
+
+			return await ExecuteCommandAsync(cmd, cancellationToken).ConfigureAwait(false);
 		}
 
 		public async Task<Int32> ExecuteAsync (string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
@@ -618,18 +627,230 @@ namespace Artisan.Orm
 	
 		#endregion
 
+		#region [ ReadToArray, ReadAsArray ]
+
+		public T[] ReadToArray<T>(string sql, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return cmd.ReadToArray<T>();
+		}
+
+		public T[] ReadToArray<T>(string sql, Action<SqlCommand> action)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return cmd.ReadToArray<T>();
+		}
+
+		public T[] ReadToArray<T>(string sql, Func<SqlDataReader, T> createFunc, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return cmd.ReadToArray<T>(createFunc);
+		}
+
+		public T[] ReadToArray<T>(string sql, Func<SqlDataReader, T> createFunc, Action<SqlCommand> action)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return cmd.ReadToArray<T>(createFunc);
+		}
+
+		public async Task<T[]> ReadToArrayAsync<T>(string sql, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToArrayAsync<T>().ConfigureAwait(false);
+		}
+
+		public async Task<T[]> ReadToArrayAsync<T>(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToArrayAsync<T>(cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<T[]> ReadToArrayAsync<T>(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return await cmd.ReadToArrayAsync<T>(cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<T[]> ReadToArrayAsync<T>(string sql, Func<SqlDataReader, T> createFunc, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToArrayAsync<T>(createFunc, cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<T[]> ReadToArrayAsync<T>(string sql, Func<SqlDataReader, T> createFunc, Action<SqlCommand> action, CancellationToken cancellationToken = default)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return await cmd.ReadToArrayAsync<T>(createFunc, cancellationToken).ConfigureAwait(false);
+		}
+
+		public T[] ReadAsArray<T>(string sql, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return cmd.ReadAsArray<T>();
+		}
+
+		public T[] ReadAsArray<T>(string sql, Action<SqlCommand> action)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return cmd.ReadAsArray<T>();
+		}
+
+		public async Task<T[]> ReadAsArrayAsync<T>(string sql, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadAsArrayAsync<T>().ConfigureAwait(false);
+		}
+
+		public async Task<T[]> ReadAsArrayAsync<T>(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadAsArrayAsync<T>(cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<T[]> ReadAsArrayAsync<T>(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return await cmd.ReadAsArrayAsync<T>(cancellationToken).ConfigureAwait(false);
+		}
+
+		#endregion
+
+		#region [ ReadDynamic, ReadDynamicList, ReadDynamicArray ]
+
+		public dynamic? ReadDynamic(string sql, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return cmd.ReadDynamic();
+		}
+
+		public dynamic? ReadDynamic(string sql, Action<SqlCommand> action)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return cmd.ReadDynamic();
+		}
+
+		public async Task<dynamic?> ReadDynamicAsync(string sql, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadDynamicAsync().ConfigureAwait(false);
+		}
+
+		public async Task<dynamic?> ReadDynamicAsync(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadDynamicAsync(cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<dynamic?> ReadDynamicAsync(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return await cmd.ReadDynamicAsync(cancellationToken).ConfigureAwait(false);
+		}
+
+		public IList<dynamic> ReadDynamicList(string sql, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return cmd.ReadDynamicList();
+		}
+
+		public IList<dynamic> ReadDynamicList(string sql, Action<SqlCommand> action)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return cmd.ReadDynamicList();
+		}
+
+		public async Task<IList<dynamic>> ReadDynamicListAsync(string sql, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadDynamicListAsync().ConfigureAwait(false);
+		}
+
+		public async Task<IList<dynamic>> ReadDynamicListAsync(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadDynamicListAsync(cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<IList<dynamic>> ReadDynamicListAsync(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return await cmd.ReadDynamicListAsync(cancellationToken).ConfigureAwait(false);
+		}
+
+		public IList<dynamic> ReadDynamicArray(string sql, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return cmd.ReadDynamicArray();
+		}
+
+		public IList<dynamic> ReadDynamicArray(string sql, Action<SqlCommand> action)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return cmd.ReadDynamicArray();
+		}
+
+		public async Task<dynamic[]> ReadDynamicArrayAsync(string sql, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadDynamicArrayAsync().ConfigureAwait(false);
+		}
+
+		public async Task<dynamic[]> ReadDynamicArrayAsync(string sql, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadDynamicArrayAsync(cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<dynamic[]> ReadDynamicArrayAsync(string sql, Action<SqlCommand> action, CancellationToken cancellationToken = default)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return await cmd.ReadDynamicArrayAsync(cancellationToken).ConfigureAwait(false);
+		}
+
+		#endregion
+
 		#region [ ReadToObjectRow, ReadAsObjectRow ]
+
+		public ObjectRow? ReadToObjectRow(string sql, Func<SqlDataReader, ObjectRow> createFunc, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return cmd.ReadToObjectRow(createFunc);
+		}
+
+		public ObjectRow? ReadToObjectRow(string sql, Func<SqlDataReader, ObjectRow> createFunc, Action<SqlCommand> action)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return cmd.ReadToObjectRow(createFunc);
+		}
 
 		public ObjectRow? ReadToObjectRow<T>(string sql, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
 			return cmd.ReadToObjectRow<T>();
 		}
-	
+
 		public ObjectRow? ReadToObjectRow<T>(string sql, Action<SqlCommand> action)
 		{
 			using var cmd = CreateCommand(sql, action);
 			return cmd.ReadToObjectRow<T>();
+		}
+
+		public async Task<ObjectRow?> ReadToObjectRowAsync(string sql, Func<SqlDataReader, ObjectRow> createFunc, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToObjectRowAsync(createFunc).ConfigureAwait(false);
+		}
+
+		public async Task<ObjectRow?> ReadToObjectRowAsync(string sql, Func<SqlDataReader, ObjectRow> createFunc, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToObjectRowAsync(createFunc, cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<ObjectRow?> ReadToObjectRowAsync(string sql, Func<SqlDataReader, ObjectRow> createFunc, Action<SqlCommand> action, CancellationToken cancellationToken = default)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return await cmd.ReadToObjectRowAsync(createFunc, cancellationToken).ConfigureAwait(false);
 		}
 
 		public async Task<ObjectRow?> ReadToObjectRowAsync<T>(string sql, params SqlParameter[] sqlParameters)
@@ -684,6 +905,18 @@ namespace Artisan.Orm
 
 		#region [ ReadToObjectRows, ReadAsObjectRows ]
 
+		public ObjectRows ReadToObjectRows(string sql, Func<SqlDataReader, ObjectRow> createFunc, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return cmd.ReadToObjectRows(createFunc);
+		}
+
+		public ObjectRows ReadToObjectRows(string sql, Func<SqlDataReader, ObjectRow> createFunc, Action<SqlCommand> action)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return cmd.ReadToObjectRows(createFunc);
+		}
+
 		public ObjectRows ReadToObjectRows<T>(string sql, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
@@ -696,6 +929,24 @@ namespace Artisan.Orm
 			return cmd.ReadToObjectRows<T>();
 		}
 	
+		public async Task<ObjectRows> ReadToObjectRowsAsync(string sql, Func<SqlDataReader, ObjectRow> createFunc, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToObjectRowsAsync(createFunc).ConfigureAwait(false);
+		}
+
+		public async Task<ObjectRows> ReadToObjectRowsAsync(string sql, Func<SqlDataReader, ObjectRow> createFunc, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters)
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToObjectRowsAsync(createFunc, cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<ObjectRows> ReadToObjectRowsAsync(string sql, Func<SqlDataReader, ObjectRow> createFunc, Action<SqlCommand> action, CancellationToken cancellationToken = default)
+		{
+			using var cmd = CreateCommand(sql, action);
+			return await cmd.ReadToObjectRowsAsync(createFunc, cancellationToken).ConfigureAwait(false);
+		}
+
 		public async Task<ObjectRows> ReadToObjectRowsAsync<T>(string sql, params SqlParameter[] sqlParameters)
 		{
 			using var cmd = CreateCommand(sql, sqlParameters);
@@ -931,7 +1182,67 @@ namespace Artisan.Orm
 			using var cmd = CreateCommand(sql, action);
 			return cmd.ReadToTreeList<T>(hierarchicallySorted);
 		}
-	
+
+		public async Task<T?> ReadToTreeAsync<T>(string sql, bool hierarchicallySorted = false, params SqlParameter[] sqlParameters) where T : class, INode<T>
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToTreeAsync<T>(hierarchicallySorted).ConfigureAwait(false);
+		}
+
+		public async Task<T?> ReadToTreeAsync<T>(string sql, CancellationToken cancellationToken = default, bool hierarchicallySorted = false, params SqlParameter[] sqlParameters) where T : class, INode<T>
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToTreeAsync<T>(hierarchicallySorted, cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<T?> ReadToTreeAsync<T>(string sql, Action<SqlCommand> action, bool hierarchicallySorted = false, CancellationToken cancellationToken = default) where T : class, INode<T>
+		{
+			using var cmd = CreateCommand(sql, action);
+			return await cmd.ReadToTreeAsync<T>(hierarchicallySorted, cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<T?> ReadToTreeAsync<T>(string sql, Func<SqlDataReader, T> createFunc, bool hierarchicallySorted = false, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters) where T : class, INode<T>
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToTreeAsync<T>(createFunc, hierarchicallySorted, cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<T?> ReadToTreeAsync<T>(string sql, Func<SqlDataReader, T> createFunc, Action<SqlCommand> action, bool hierarchicallySorted = false, CancellationToken cancellationToken = default) where T : class, INode<T>
+		{
+			using var cmd = CreateCommand(sql, action);
+			return await cmd.ReadToTreeAsync<T>(createFunc, hierarchicallySorted, cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<IList<T>> ReadToTreeListAsync<T>(string sql, bool hierarchicallySorted = false, params SqlParameter[] sqlParameters) where T : class, INode<T>
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToTreeListAsync<T>(hierarchicallySorted).ConfigureAwait(false);
+		}
+
+		public async Task<IList<T>> ReadToTreeListAsync<T>(string sql, CancellationToken cancellationToken = default, bool hierarchicallySorted = false, params SqlParameter[] sqlParameters) where T : class, INode<T>
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToTreeListAsync<T>(hierarchicallySorted, cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<IList<T>> ReadToTreeListAsync<T>(string sql, Action<SqlCommand> action, bool hierarchicallySorted = false, CancellationToken cancellationToken = default) where T : class, INode<T>
+		{
+			using var cmd = CreateCommand(sql, action);
+			return await cmd.ReadToTreeListAsync<T>(hierarchicallySorted, cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<IList<T>> ReadToTreeListAsync<T>(string sql, Func<SqlDataReader, T> createFunc, bool hierarchicallySorted = false, CancellationToken cancellationToken = default, params SqlParameter[] sqlParameters) where T : class, INode<T>
+		{
+			using var cmd = CreateCommand(sql, sqlParameters);
+			return await cmd.ReadToTreeListAsync<T>(createFunc, hierarchicallySorted, cancellationToken).ConfigureAwait(false);
+		}
+
+		public async Task<IList<T>> ReadToTreeListAsync<T>(string sql, Func<SqlDataReader, T> createFunc, Action<SqlCommand> action, bool hierarchicallySorted = false, CancellationToken cancellationToken = default) where T : class, INode<T>
+		{
+			using var cmd = CreateCommand(sql, action);
+			return await cmd.ReadToTreeListAsync<T>(createFunc, hierarchicallySorted, cancellationToken).ConfigureAwait(false);
+		}
+
 		#endregion
 
 		/// <summary>

@@ -244,10 +244,46 @@ namespace Artisan.Orm
 		{
 			return (await cmd.ReadToListAsync<T>(cancellationToken).ConfigureAwait(false)).ToArray();
 		}
-	
+
 		public static async Task<T[]> ReadAsArrayAsync<T>(this SqlCommand cmd, CancellationToken cancellationToken = default)
 		{
 			return (await cmd.ReadAsListAsync<T>(cancellationToken).ConfigureAwait(false)).ToArray();
+		}
+
+
+		public static async Task<dynamic?> ReadDynamicAsync(this SqlCommand cmd, CancellationToken cancellationToken = default)
+		{
+			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleRow).ConfigureAwait(false);
+
+			using var dr = await cmd.ExecuteReaderAsync(readerFlags, cancellationToken).ConfigureAwait(false);
+			return await dr.ReadAsync(cancellationToken).ConfigureAwait(false) ? dr.CreateDynamic() : null;
+		}
+
+		public static async Task<IList<dynamic>> ReadDynamicListAsync(this SqlCommand cmd, IList<dynamic>? list, CancellationToken cancellationToken = default)
+		{
+			list ??= new List<dynamic>();
+
+			var iList = (System.Collections.IList)list;
+
+			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleResult).ConfigureAwait(false);
+
+			using (var dr = await cmd.ExecuteReaderAsync(readerFlags, cancellationToken).ConfigureAwait(false))
+			{
+				while (await dr.ReadAsync(cancellationToken).ConfigureAwait(false))
+					iList.Add(dr.CreateDynamic());
+			}
+
+			return list;
+		}
+
+		public static Task<IList<dynamic>> ReadDynamicListAsync(this SqlCommand cmd, CancellationToken cancellationToken = default)
+		{
+			return cmd.ReadDynamicListAsync(null, cancellationToken);
+		}
+
+		public static async Task<dynamic[]> ReadDynamicArrayAsync(this SqlCommand cmd, CancellationToken cancellationToken = default)
+		{
+			return (await cmd.ReadDynamicListAsync(null, cancellationToken).ConfigureAwait(false)).ToArray();
 		}
 
 		#endregion
