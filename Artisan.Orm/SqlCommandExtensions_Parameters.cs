@@ -825,6 +825,37 @@ namespace Artisan.Orm
 
 		/// <summary>Adds a TVP built via the registered mapper for <typeparamref name="T"/>
 		/// (<c>CreateDataTable</c>/<c>CreateDataRow</c>).</summary>
+		/// <remarks>
+		/// Requires three pieces wired together:
+		/// <list type="number">
+		/// <item>A user-defined SQL table type (e.g. <c>create type RecordTableType as table (Id int, Name nvarchar(30))</c>).</item>
+		/// <item>A <c>[MapperFor(typeof(T))]</c> static class with <c>CreateDataTable</c> (its <see cref="DataTable.TableName"/>
+		/// must equal the SQL type name) and <c>CreateDataRow(T)</c> producing an <c>object[]</c> in column order.</item>
+		/// <item>A stored procedure parameter typed as <c>readonly</c> of that table type.</item>
+		/// </list>
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// // 1) C# mapper:
+		/// [MapperFor(typeof(Record), RequiredMethod.All)]
+		/// public static class RecordMapper
+		/// {
+		///     public static DataTable CreateDataTable() => new DataTable("RecordTableType")
+		///         .AddColumn<int>   ("Id")
+		///         .AddColumn<string>("Name");
+		///
+		///     public static object[] CreateDataRow(Record r) => new object[] { r.Id, r.Name };
+		/// }
+		///
+		/// // 2) Call site:
+		/// using var cmd = repo.CreateCommand();
+		/// cmd.UseProcedure("dbo.SaveRecords");
+		/// cmd.AddTableParam("@Records", records);
+		///
+		/// // 3) T-SQL side:
+		/// // create procedure dbo.SaveRecords @Records dbo.RecordTableType readonly as ...
+		/// ]]></code>
+		/// </example>
 		public static void AddTableParam<T>(this SqlCommand cmd, string parameterName, IEnumerable<T> list)
 		{
 			cmd.AddTableParam(parameterName, list?.ToDataTable<T>());

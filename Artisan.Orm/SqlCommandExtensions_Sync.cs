@@ -593,8 +593,35 @@ namespace Artisan.Orm
 		/// <summary>Reads a flat <see cref="INode{T}"/> result set, projects each row through
 		/// <paramref name="createFunc"/> into <paramref name="list"/>, then assembles the rows into a tree
 		/// by linking each node to its parent and returns the root.</summary>
-		/// <remarks>Pass <paramref name="hierarchicallySorted"/>=<c>true</c> when the SQL already returns rows in
-		/// pre-order traversal — that enables a faster single-pass build.</remarks>
+		/// <remarks>
+		/// <para><typeparamref name="T"/> must implement <see cref="INode{T}"/>, which means each row exposes
+		/// <c>Id</c>, <c>ParentId</c> and a <c>Children</c> collection. Rows whose <c>ParentId</c> is <c>null</c>
+		/// are treated as roots; everything else is attached to its parent's <c>Children</c>.</para>
+		/// <para>Pass <paramref name="hierarchicallySorted"/>=<c>true</c> when the SQL already returns rows in
+		/// pre-order traversal (e.g. <c>order by hierarchyid</c> or <c>order by Path</c>) — that switches the
+		/// builder to a faster single-pass mode that walks the list as a stack.</para>
+		/// <para>If multiple roots are present, only the first is returned. Use <see cref="ReadToTreeList{T}(SqlCommand, Func{SqlDataReader, T}, IList{T}, bool)"/>
+		/// when the result set may contain a forest.</para>
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// public class Folder : INode<Folder>
+		/// {
+		///     public int Id { get; set; }
+		///     public int? ParentId { get; set; }
+		///     public string Name { get; set; }
+		///     public IList<Folder>? Children { get; set; }
+		/// }
+		///
+		/// // SQL returns Id, ParentId, Name ordered hierarchically.
+		/// var root = repo.GetByCommand(cmd =>
+		/// {
+		///     cmd.UseProcedure("dbo.GetFolderTree");
+		///     cmd.AddIntParam("@RootFolderId", 1);
+		///     return cmd.ReadToTree<Folder>(hierarchicallySorted: true);
+		/// });
+		/// ]]></code>
+		/// </example>
 		public static T? ReadToTree<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, IList<T>? list, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToListOfObjects<T>(createFunc, list).ToTree(hierarchicallySorted);
@@ -623,6 +650,10 @@ namespace Artisan.Orm
 
 		/// <summary>Reads a flat <see cref="INode{T}"/> result set, links nodes into a forest, and returns
 		/// the list of root nodes.</summary>
+		/// <remarks>Same algorithm as <see cref="ReadToTree{T}(SqlCommand, Func{SqlDataReader, T}, IList{T}, bool)"/>,
+		/// but returns every <c>ParentId == null</c> row as an independent root instead of just the first one.
+		/// Use this when the query may legitimately produce multiple top-level nodes (e.g. all top-level
+		/// folders for several users).</remarks>
 		public static IList<T> ReadToTreeList<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, IList<T>? list, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToListOfObjects<T>(createFunc, list).ToTreeList(hierarchicallySorted);

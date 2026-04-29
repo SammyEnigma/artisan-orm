@@ -71,6 +71,22 @@ namespace Artisan.Orm
 		/// <param name="isolationLevel">The isolation level under which the transaction runs.</param>
 		/// <param name="action">The code to execute inside the transaction. Must call
 		/// <see cref="SqlTransaction.Commit"/> explicitly to persist any changes.</param>
+		/// <example>
+		/// <code><![CDATA[
+		/// // Manual-commit pattern: call tran.Commit() to persist; otherwise everything rolls back.
+		/// repo.BeginTransaction(IsolationLevel.RepeatableRead, tran =>
+		/// {
+		///     var balance = repo.ReadTo<decimal>("select Balance from Accounts where Id = @Id",
+		///         new SqlParameter("@Id", accountId));
+		///
+		///     if (balance < amount) return; // implicit rollback
+		///
+		///     repo.Execute("update Accounts set Balance -= @A where Id = @Id",
+		///         new SqlParameter("@A", amount), new SqlParameter("@Id", accountId));
+		///     tran.Commit();
+		/// });
+		/// ]]></code>
+		/// </example>
 		public void BeginTransaction(IsolationLevel isolationLevel, Action<SqlTransaction> action)
 		{
 			var isConnectionClosed = Connection!.State == ConnectionState.Closed;
@@ -138,6 +154,25 @@ namespace Artisan.Orm
 		/// </summary>
 		/// <param name="isolationLevel">The isolation level under which the transaction runs.</param>
 		/// <param name="action">The code to execute inside the transaction.</param>
+		/// <example>
+		/// <code><![CDATA[
+		/// // Auto-commit pattern: returning normally commits; throwing rolls back.
+		/// repo.RunInTransaction(IsolationLevel.Serializable, tran =>
+		/// {
+		///     repo.Execute("dbo.MoveFunds",
+		///         new SqlParameter("@From", fromId),
+		///         new SqlParameter("@To",   toId),
+		///         new SqlParameter("@Amt",  amount));
+		///
+		///     repo.Execute("dbo.RecordTransfer",
+		///         new SqlParameter("@From", fromId),
+		///         new SqlParameter("@To",   toId),
+		///         new SqlParameter("@Amt",  amount));
+		///
+		///     // No tran.Commit() call — RunInTransaction commits automatically.
+		/// });
+		/// ]]></code>
+		/// </example>
 		public void RunInTransaction(IsolationLevel isolationLevel, Action<SqlTransaction> action)
 		{
 			var isConnectionClosed = Connection!.State == ConnectionState.Closed;
