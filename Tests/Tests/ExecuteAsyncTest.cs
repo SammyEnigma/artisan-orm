@@ -20,38 +20,57 @@ namespace Tests.Tests
 		public void TestCleanup() => _repository.Dispose();
 
 
+		// SQL Server forbids "return <value>" in ad-hoc batches — only stored procedures
+		// can set @ReturnValue. So these tests just verify the new overload is reachable
+		// and runs end-to-end through the cancellation-token-aware code path.
+
 		[TestMethod]
-		public async Task ExecuteAsync_WithCancellationToken_NoParams()
+		public async Task ExecuteAsync_WithCancellationToken_NoParams_ExecutesAdHocSql()
 		{
 			using var cts = new CancellationTokenSource();
 
-			var ret = await _repository.ExecuteAsync("select 1; return 7;", cts.Token);
-
-			Assert.AreEqual(7, ret);
+			// No-op delete: SQL parses, runs, removes 0 rows.
+			await _repository.ExecuteAsync(
+				"delete from dbo.RecordsBulk where Id = -999;",
+				cts.Token);
 		}
 
 		[TestMethod]
-		public async Task ExecuteAsync_WithCancellationToken_AndParams()
+		public async Task ExecuteAsync_WithCancellationToken_AndParams_BindsParameters()
 		{
 			using var cts = new CancellationTokenSource();
 
-			var ret = await _repository.ExecuteAsync(
-				"if @P = 5 return 100; return 0;",
+			await _repository.ExecuteAsync(
+				"delete from dbo.RecordsBulk where Id = @Id;",
 				cts.Token,
-				new SqlParameter("@P", 5));
-
-			Assert.AreEqual(100, ret);
+				new SqlParameter("@Id", -999));
 		}
 
 		[TestMethod]
-		public async Task ExecuteAsync_NoCancellation_PathStillWorks()
+		public async Task ExecuteAsync_WithCancellationToken_OnStoredProc_ReturnsValue()
 		{
-			// Pre-existing overload that takes (sql, params SqlParameter[]).
-			var ret = await _repository.ExecuteAsync(
-				"if @P = 1 return 11; return 0;",
-				new SqlParameter("@P", 1));
+			// dbo.DeleteUser returns 2 when the user is missing; pick a nonexistent id
+			// so the proc returns without mutating data.
+			using var cts = new CancellationTokenSource();
 
-			Assert.AreEqual(11, ret);
+			var returnValue = await _repository.ExecuteAsync(
+				"dbo.DeleteUser",
+				cts.Token,
+				new SqlParameter("@UserId", -999));
+
+			Assert.AreEqual(2, returnValue);
+		}
+
+		[TestMethod]
+		public async Task ExecuteAsync_NoCancellation_ParamsOverload_StillWorks()
+		{
+			// The existing overload (sql, params SqlParameter[]) — keeps working with the
+			// new ConfigureAwait(false) wiring.
+			var returnValue = await _repository.ExecuteAsync(
+				"dbo.DeleteUser",
+				new SqlParameter("@UserId", -999));
+
+			Assert.AreEqual(2, returnValue);
 		}
 	}
 }

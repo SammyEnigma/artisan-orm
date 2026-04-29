@@ -84,33 +84,32 @@ namespace Tests.Tests
 		}
 
 		[TestMethod]
-		public void BulkCopy_InsideTransaction_RolledBack_LeavesNoRows()
+		public void BulkCopy_InsideTransaction_RolledBackOnException_LeavesNoRows()
 		{
-			_repository.RunInTransaction(tran =>
-			{
-				_repository.BulkInsertRecords(MakeRows(10));
-				Assert.AreEqual(10, _repository.CountRecordsBulk());
-
-				// Force rollback by throwing — RunInTransaction rolls back on exception.
-				throw new InvalidOperationException("force rollback");
-			});
-		}
-
-		// Companion test that catches the exception thrown by the previous test:
-		[TestMethod]
-		public void BulkCopy_RolledBack_AssertEmpty()
-		{
-			try
+			Assert.ThrowsExactly<InvalidOperationException>(() =>
 			{
 				_repository.RunInTransaction(tran =>
 				{
 					_repository.BulkInsertRecords(MakeRows(10));
+					Assert.AreEqual(10, _repository.CountRecordsBulk());
+
+					// Force rollback — RunInTransaction rolls back when the action throws.
 					throw new InvalidOperationException("force rollback");
 				});
-			}
-			catch (InvalidOperationException) { /* expected */ }
+			});
 
 			Assert.AreEqual(0, _repository.CountRecordsBulk());
+		}
+
+		[TestMethod]
+		public void BulkCopy_InsideTransaction_Committed_PersistsRows()
+		{
+			_repository.RunInTransaction(tran =>
+			{
+				_repository.BulkInsertRecords(MakeRows(7));
+			});
+
+			Assert.AreEqual(7, _repository.CountRecordsBulk());
 		}
 
 		[TestMethod]

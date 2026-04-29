@@ -140,17 +140,6 @@ namespace Tests.Tests
 			Assert.IsTrue(rows.Count > 0);
 		}
 
-		[TestMethod]
-		public async Task ExecuteAsync_WithCancellationToken_AndParams()
-		{
-			// Exercise the new ExecuteAsync(sql, ct, params) overload.
-			using var cts = new CancellationTokenSource();
-
-			var ret = await _repository.ExecuteAsync(
-				"select 1; return 42;",
-				cts.Token);
-
-			Assert.AreEqual(42, ret);
-		}
+		// ExecuteAsync(sql, ct[, params]) is exercised exhaustively by ExecuteAsyncTest.cs.
 	}
 }

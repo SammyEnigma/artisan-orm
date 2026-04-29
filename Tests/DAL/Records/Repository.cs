@@ -321,9 +321,17 @@ namespace Tests.DAL.Records
 			return BulkCopyAsAsync(records, "dbo.RecordsBulk", ct);
 		}
 
-		public int TruncateRecordsBulk()
+		public void TruncateRecordsBulk()
 		{
-			return Execute("truncate table dbo.RecordsBulk");
+			// "truncate" isn't in the regex that distinguishes raw SQL from a stored
+			// procedure name in Execute(...), so we route through RunCommand + UseSql.
+			RunCommand(cmd =>
+			{
+				cmd.UseSql("truncate table dbo.RecordsBulk");
+				cmd.Connection.Open();
+				try   { cmd.ExecuteNonQuery(); }
+				finally { cmd.Connection.Close(); }
+			});
 		}
 
 		public int CountRecordsBulk()
