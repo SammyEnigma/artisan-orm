@@ -10,9 +10,12 @@ namespace Artisan.Orm
 
 	public static partial class SqlDataReaderExtensions
 	{
-		public static void Read(this SqlDataReader dr, Action<SqlDataReader> action, bool getNextResult = true) 
+		/// <summary>If the reader has at least one row in the current result set, hands it to <paramref name="action"/>.
+		/// When <paramref name="getNextResult"/> is <c>true</c> (default), advances to the next result set on exit
+		/// — convenient for chaining multiple <c>Read*</c> calls on a multi-result-set <see cref="SqlDataReader"/>.</summary>
+		public static void Read(this SqlDataReader dr, Action<SqlDataReader> action, bool getNextResult = true)
 		{
-			if (dr.Read()) 
+			if (dr.Read())
 				action(dr);
 
 			if (getNextResult) dr.NextResult();
@@ -39,6 +42,8 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Reads a single row, projects it through <paramref name="createFunc"/>, and optionally
+		/// advances to the next result set. Returns <c>default</c> when the current set is empty.</summary>
 		public static T? ReadTo<T>(this SqlDataReader dr, Func<SqlDataReader, T> createFunc, bool getNextResult = true)
 		{
 			var obj = dr.Read() ? createFunc(dr) : default;
@@ -48,6 +53,8 @@ namespace Artisan.Orm
 			return obj;
 		}
 
+		/// <summary>Reads a single row using the registered mapper for <typeparamref name="T"/>
+		/// (or scalar conversion for simple types). Optionally advances to the next result set.</summary>
 		public static T? ReadTo<T>(this SqlDataReader dr, bool getNextResult = true)
 		{
 			if (typeof(T).IsSimpleType())
@@ -57,6 +64,8 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Reads a single row using auto-mapping (reflection-based, cached after first call) for
+		/// <typeparamref name="T"/>. Optionally advances to the next result set.</summary>
 		public static T? ReadAs<T>(this SqlDataReader dr, bool getNextResult = true)
 		{
 			if (typeof(T).IsSimpleType())
@@ -65,6 +74,7 @@ namespace Artisan.Orm
 			return dr.ReadTo(CreateObject<T>, getNextResult);
 		}
 
+		/// <summary>Reads a single row into an <see cref="System.Dynamic.ExpandoObject"/>; returns <c>null</c> when empty.</summary>
 		public static dynamic? ReadDynamic(this SqlDataReader dr, bool getNextResult = true)
 		{
 			var obj = dr.Read() ? dr.CreateDynamic() : null;
@@ -115,6 +125,8 @@ namespace Artisan.Orm
 			return list;
 		}
 
+		/// <summary>Reads all rows of the current result set into <paramref name="list"/> (or a new list
+		/// if <c>null</c>) via <paramref name="createFunc"/>. Optionally advances to the next result set.</summary>
 		public static IList<T> ReadToList<T>(this SqlDataReader dr, Func<SqlDataReader, T> createFunc, IList<T>? list, bool getNextResult = true)
 		{
 			list ??= new List<T>();
@@ -134,6 +146,7 @@ namespace Artisan.Orm
 			return list;
 		}
 
+		/// <inheritdoc cref="ReadToList{T}(SqlDataReader, Func{SqlDataReader, T}, IList{T}, bool)"/>
 		public static IList<T> ReadToList<T>(this SqlDataReader dr, Func<SqlDataReader, T> createFunc, bool getNextResult = true)
 		{
 			if (typeof(T).IsSimpleType())
@@ -142,6 +155,8 @@ namespace Artisan.Orm
 			return dr.ReadToListOfObjects<T>(createFunc, null, getNextResult);
 		}
 
+		/// <summary>Reads all rows of the current result set into <paramref name="list"/> (or a new list
+		/// if <c>null</c>) using the registered mapper for <typeparamref name="T"/>.</summary>
 		public static IList<T> ReadToList<T>(this SqlDataReader dr, IList<T>? list, bool getNextResult = true)
 		{
 			if (typeof(T).IsSimpleType())
@@ -150,6 +165,7 @@ namespace Artisan.Orm
 			return dr.ReadToListOfObjects<T>(MappingManager.GetCreateObjectFunc<T>(), list, getNextResult);
 		}
 
+		/// <inheritdoc cref="ReadToList{T}(SqlDataReader, IList{T}, bool)"/>
 		public static IList<T> ReadToList<T>(this SqlDataReader dr, bool getNextResult = true)
 		{
 			if (typeof(T).IsSimpleType())
@@ -158,6 +174,8 @@ namespace Artisan.Orm
 			return dr.ReadToListOfObjects<T>(MappingManager.GetCreateObjectFunc<T>(), null, getNextResult);
 		}
 
+		/// <summary>Reads all rows of the current result set into <paramref name="list"/> (or a new list
+		/// if <c>null</c>) using auto-mapping (reflection-based, cached after first call).</summary>
 		public static IList<T> ReadAsList<T>(this SqlDataReader dr, IList<T>? list, bool getNextResult = true)
 		{
 			if (typeof(T).IsSimpleType())
@@ -191,6 +209,7 @@ namespace Artisan.Orm
 			return list;
 		}
 
+		/// <inheritdoc cref="ReadAsList{T}(SqlDataReader, IList{T}, bool)"/>
 		public static IList<T> ReadAsList<T>(this SqlDataReader dr, bool getNextResult = true)
 		{
 			if (typeof(T).IsSimpleType())
@@ -199,6 +218,8 @@ namespace Artisan.Orm
 			return dr.ReadAsList<T>(null, getNextResult);
 		}
 
+		/// <summary>Reads all rows into <paramref name="list"/> (or a new list if <c>null</c>) where each
+		/// row becomes an <see cref="System.Dynamic.ExpandoObject"/>.</summary>
 		public static IList<dynamic> ReadDynamicList(this SqlDataReader dr, IList<dynamic>? list, bool getNextResult = true)
 		{
 			list ??= new List<dynamic>();
@@ -213,26 +234,31 @@ namespace Artisan.Orm
 			return list;
 		}
 
+		/// <inheritdoc cref="ReadDynamicList(SqlDataReader, IList{dynamic}, bool)"/>
 		public static IList<dynamic> ReadDynamicList(this SqlDataReader dr, bool getNextResult = true)
 		{
 			return dr.ReadDynamicList(null, getNextResult);
 		}
 
-		public static T[] ReadToArray<T>(this SqlDataReader dr, Func<SqlDataReader, T> createFunc, bool getNextResult = true) 
+		/// <summary>Reads all rows into a <typeparamref name="T"/>-typed array via <paramref name="createFunc"/>.</summary>
+		public static T[] ReadToArray<T>(this SqlDataReader dr, Func<SqlDataReader, T> createFunc, bool getNextResult = true)
 		{
 			return dr.ReadToList<T>(createFunc, getNextResult).ToArray();
 		}
 
+		/// <summary>Reads all rows into a <typeparamref name="T"/>-typed array using the registered mapper.</summary>
 		public static T[] ReadToArray<T>(this SqlDataReader dr, bool getNextResult = true)
 		{
 			return dr.ReadToList<T>(getNextResult).ToArray();
 		}
 
+		/// <summary>Reads all rows into a <typeparamref name="T"/>-typed array using auto-mapping.</summary>
 		public static T[] ReadAsArray<T>(this SqlDataReader dr, bool getNextResult = true)
 		{
 			return dr.ReadAsList<T>(getNextResult).ToArray();
 		}
 
+		/// <summary>Reads all rows into an array of <see cref="System.Dynamic.ExpandoObject"/>.</summary>
 		public static dynamic[] ReadDynamicArray(this SqlDataReader dr, bool getNextResult = true)
 		{
 			return dr.ReadDynamicList(getNextResult).ToArray();
@@ -271,7 +297,11 @@ namespace Artisan.Orm
 			if (getNextResult) dr.NextResult();
 		}
 	
-		public static IEnumerable<T> ReadToEnumerable<T>(this SqlDataReader dr, Func<SqlDataReader, T> createFunc, bool getNextResult = true) 
+		/// <summary>Streams rows lazily through <paramref name="createFunc"/>. Note: the reader stays
+		/// positioned on the current result set until enumeration completes — combining this with
+		/// <paramref name="getNextResult"/>=<c>true</c> only triggers <c>NextResult()</c> after the consumer drains
+		/// the iterator.</summary>
+		public static IEnumerable<T> ReadToEnumerable<T>(this SqlDataReader dr, Func<SqlDataReader, T> createFunc, bool getNextResult = true)
 		{
 			if (typeof(T).IsSimpleType())
 				return dr.ReadToEnumerableOfValues<T>(getNextResult);
@@ -279,6 +309,7 @@ namespace Artisan.Orm
 			return dr.ReadToEnumerableOfObjects<T>(createFunc, getNextResult);
 		}
 	
+		/// <summary>Streams rows lazily using the registered mapper for <typeparamref name="T"/>.</summary>
 		public static IEnumerable<T> ReadToEnumerable<T>(this SqlDataReader dr, bool getNextResult = true)
 		{
 			if (typeof(T).IsSimpleType())
@@ -287,6 +318,7 @@ namespace Artisan.Orm
 			return dr.ReadToEnumerableOfObjects<T>(MappingManager.GetCreateObjectFunc<T>(), getNextResult);
 		}
 	
+		/// <summary>Streams rows lazily using auto-mapping (reflection-based, cached after first call).</summary>
 		public static IEnumerable<T> ReadAsEnumerable<T>(this SqlDataReader dr, bool getNextResult = true)
 		{
 			if (typeof(T).IsSimpleType())
@@ -310,6 +342,7 @@ namespace Artisan.Orm
 
 		#region [ ReadToObjectRow(s), ReadAsObjectRow(s) ]
 
+		/// <summary>Reads a single row into an <see cref="ObjectRow"/> via <paramref name="createFunc"/>.</summary>
 		public static ObjectRow? ReadToObjectRow(this SqlDataReader dr, Func<SqlDataReader, ObjectRow> createFunc, bool getNextResult = true)
 		{
 			var objectRow = dr.Read() ? createFunc(dr) : null;
@@ -319,13 +352,16 @@ namespace Artisan.Orm
 			return objectRow;
 		}
 
+		/// <summary>Reads a single row into an <see cref="ObjectRow"/> using the registered
+		/// <c>CreateObjectRow</c> mapper for <typeparamref name="T"/>.</summary>
 		public static ObjectRow? ReadToObjectRow<T>(this SqlDataReader dr, bool getNextResult = true)
 		{
 			return dr.ReadToObjectRow(MappingManager.GetCreateObjectRowFunc<T>(), getNextResult);
 		}
 	
 
-		public static ObjectRows ReadToObjectRows(this SqlDataReader dr, Func<SqlDataReader, ObjectRow> createFunc, bool getNextResult = true) 
+		/// <summary>Reads all rows into an <see cref="ObjectRows"/> collection via <paramref name="createFunc"/>.</summary>
+		public static ObjectRows ReadToObjectRows(this SqlDataReader dr, Func<SqlDataReader, ObjectRow> createFunc, bool getNextResult = true)
 		{
 			var objectRows = new ObjectRows();
 
@@ -337,12 +373,15 @@ namespace Artisan.Orm
 			return objectRows;
 		}
 	
-		public static ObjectRows ReadToObjectRows<T>(this SqlDataReader dr, bool getNextResult = true) 
+		/// <summary>Reads all rows into an <see cref="ObjectRows"/> collection using the registered
+		/// <c>CreateObjectRow</c> mapper for <typeparamref name="T"/>.</summary>
+		public static ObjectRows ReadToObjectRows<T>(this SqlDataReader dr, bool getNextResult = true)
 		{
 			return dr.ReadToObjectRows(MappingManager.GetCreateObjectRowFunc<T>(), getNextResult);
 		}
 
 
+		/// <summary>Reads a single row into an <see cref="ObjectRow"/> using auto-mapping by column name.</summary>
 		public static ObjectRow? ReadAsObjectRow(this SqlDataReader dr, bool getNextResult = true)
 		{
 			ObjectRow? objectRow = null;
@@ -360,7 +399,8 @@ namespace Artisan.Orm
 			return objectRow;
 		}
 
-		public static ObjectRows ReadAsObjectRows(this SqlDataReader dr, bool getNextResult = true) 
+		/// <summary>Reads all rows into an <see cref="ObjectRows"/> collection using auto-mapping by column name.</summary>
+		public static ObjectRows ReadAsObjectRows(this SqlDataReader dr, bool getNextResult = true)
 		{
 			var objectRows = new ObjectRows();
 	
@@ -422,6 +462,8 @@ namespace Artisan.Orm
 			return dictionary;
 		}
 
+		/// <summary>Reads the current result set into a dictionary keyed by column 0; values are produced
+		/// by <paramref name="createFunc"/>.</summary>
 		public static Dictionary<TKey, TValue> ReadToDictionary<TKey, TValue>(this SqlDataReader dr, Func<SqlDataReader, TValue> createFunc, bool getNextResult = true) where TKey : notnull
 		{
 			var dictionary = new Dictionary<TKey, TValue>();
@@ -443,6 +485,8 @@ namespace Artisan.Orm
 			return dictionary;
 		}
 
+		/// <summary>Reads the current result set into a dictionary keyed by column 0; values are produced
+		/// by the registered mapper for <typeparamref name="TValue"/>.</summary>
 		public static Dictionary<TKey, TValue> ReadToDictionary<TKey, TValue>(this SqlDataReader dr, bool getNextResult = true) where TKey : notnull
 		{
 			Dictionary<TKey, TValue> dictionary;
@@ -459,6 +503,8 @@ namespace Artisan.Orm
 			return dictionary;
 		}
 
+		/// <summary>Reads the current result set into a dictionary keyed by column 0; values are produced
+		/// by auto-mapping (reflection-based, cached after first call).</summary>
 		public static Dictionary<TKey, TValue> ReadAsDictionary<TKey, TValue>(this SqlDataReader dr, bool getNextResult = true) where TKey : notnull
 		{
 			Dictionary<TKey, TValue> dictionary;
@@ -604,32 +650,38 @@ namespace Artisan.Orm
 
 		#region [ ReadToTree, ReadToTreeList ]
 
+		/// <inheritdoc cref="SqlCommandExtensions.ReadToTree{T}(SqlCommand, Func{SqlDataReader, T}, IList{T}, bool)"/>
 		public static T? ReadToTree<T>(this SqlDataReader dr, Func<SqlDataReader, T> createFunc, IList<T>? list, bool getNextResult = true, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return dr.ReadToListOfObjects<T>(createFunc, list, getNextResult).ToTree(hierarchicallySorted);
 		}
 
+		/// <inheritdoc cref="SqlCommandExtensions.ReadToTree{T}(SqlCommand, Func{SqlDataReader, T}, IList{T}, bool)"/>
 		public static T? ReadToTree<T>(this SqlDataReader dr, Func<SqlDataReader, T> createFunc, bool getNextResult = true, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return dr.ReadToEnumerableOfObjects<T>(createFunc, getNextResult).ToTree(hierarchicallySorted);
 		}
 
+		/// <inheritdoc cref="SqlCommandExtensions.ReadToTree{T}(SqlCommand, IList{T}, bool)"/>
 		public static T? ReadToTree<T>(this SqlDataReader dr, bool getNextResult = true, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return dr.ReadToEnumerableOfObjects<T>(MappingManager.GetCreateObjectFunc<T>(), getNextResult).ToTree(hierarchicallySorted);
 		}
 
 
+		/// <inheritdoc cref="SqlCommandExtensions.ReadToTreeList{T}(SqlCommand, Func{SqlDataReader, T}, IList{T}, bool)"/>
 		public static IList<T> ReadToTreeList<T>(this SqlDataReader dr, Func<SqlDataReader, T> createFunc, IList<T>? list, bool getNextResult = true, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return dr.ReadToListOfObjects<T>(createFunc, list, getNextResult).ToTreeList(hierarchicallySorted);
 		}
 	
+		/// <inheritdoc cref="SqlCommandExtensions.ReadToTreeList{T}(SqlCommand, Func{SqlDataReader, T}, IList{T}, bool)"/>
 		public static IList<T> ReadToTreeList<T>(this SqlDataReader dr, Func<SqlDataReader, T> createFunc, bool getNextResult = true, bool hierarchicallySorted = false) where T: class, INode<T>
 		{
 			return dr.ReadToEnumerableOfObjects<T>(createFunc, getNextResult).ToTreeList(hierarchicallySorted);
 		}
 
+		/// <inheritdoc cref="SqlCommandExtensions.ReadToTreeList{T}(SqlCommand, Func{SqlDataReader, T}, IList{T}, bool)"/>
 		public static IList<T> ReadToTreeList<T>(this SqlDataReader dr, bool getNextResult = true, bool hierarchicallySorted = false) where T: class, INode<T>
 		{
 			return dr.ReadToEnumerableOfObjects<T>(MappingManager.GetCreateObjectFunc<T>(), getNextResult).ToTreeList(hierarchicallySorted);

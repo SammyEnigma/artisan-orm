@@ -12,12 +12,14 @@ namespace Artisan.Orm
 
 	public static partial class SqlCommandExtensions
 	{
+		/// <summary>Configures the command to invoke a stored procedure with the given <paramref name="procedureName"/>.</summary>
 		public static void UseProcedure(this SqlCommand cmd, string procedureName)
 		{
 			cmd.CommandType = CommandType.StoredProcedure;
 			cmd.CommandText = procedureName;
 		}
 
+		/// <summary>Configures the command to execute the given <paramref name="sql"/> as a text batch.</summary>
 		public static void UseSql(this SqlCommand cmd, string sql)
 		{
 			cmd.CommandType = CommandType.Text;
@@ -27,6 +29,7 @@ namespace Artisan.Orm
 		// http://blogs.msmvps.com/jcoehoorn/blog/2014/05/12/can-we-stop-using-addwithvalue-already/
 
 
+		/// <summary>Adds an input <c>bit</c> parameter named <paramref name="parameterName"/> with <paramref name="value"/>.</summary>
 		public static void AddBitParam(this SqlCommand cmd, string parameterName, bool value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -38,6 +41,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <inheritdoc cref="AddBitParam(SqlCommand, string, bool)"/>
 		public static void AddBitParam(this SqlCommand cmd, string parameterName, bool? value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -50,6 +54,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>tinyint</c> parameter.</summary>
 		public static void AddTinyIntParam(this SqlCommand cmd, string parameterName, byte value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -61,6 +66,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <inheritdoc cref="AddTinyIntParam(SqlCommand, string, byte)"/>
 		public static void AddTinyIntParam(this SqlCommand cmd, string parameterName, byte? value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -73,6 +79,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>smallint</c> parameter.</summary>
 		public static void AddSmallIntParam(this SqlCommand cmd, string parameterName, short value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -84,6 +91,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <inheritdoc cref="AddSmallIntParam(SqlCommand, string, short)"/>
 		public static void AddSmallIntParam(this SqlCommand cmd, string parameterName,  short? value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -96,6 +104,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>int</c> parameter.</summary>
 		public static void AddIntParam(this SqlCommand cmd, string parameterName, int value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -107,6 +116,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <inheritdoc cref="AddIntParam(SqlCommand, string, int)"/>
 		public static void AddIntParam(this SqlCommand cmd, string parameterName, int? value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -119,6 +129,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>bigint</c> parameter.</summary>
 		public static void AddBigIntParam(this SqlCommand cmd, string parameterName, long value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -130,6 +141,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <inheritdoc cref="AddBigIntParam(SqlCommand, string, long)"/>
 		public static void AddBigIntParam(this SqlCommand cmd, string parameterName, long? value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -142,6 +154,9 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>decimal(<paramref name="precision"/>, <paramref name="scale"/>)</c> parameter.
+		/// When <paramref name="truncateFraction"/> is <c>true</c>, fractional digits beyond <paramref name="scale"/>
+		/// are truncated; when <c>false</c>, SQL Server's default rounding rules apply.</summary>
 		public static void AddDecimalParam(this SqlCommand cmd, string parameterName, byte precision,  byte scale,  decimal value, bool truncateFraction = false)
 		{
 			var valueString = Math.Abs(value).ToString(CultureInfo.InvariantCulture);
@@ -171,6 +186,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <inheritdoc cref="AddDecimalParam(SqlCommand, string, byte, byte, decimal, bool)"/>
 		public static void AddDecimalParam(this SqlCommand cmd, string parameterName, byte precision,  byte scale,  decimal? value, bool truncateFraction = false )
 		{
 			if (value != null)
@@ -188,6 +204,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>smallmoney</c> parameter.</summary>
 		public static void AddSmallMoneyParam(this SqlCommand cmd, string parameterName, decimal value )
 		{
 			if (value < -214748.3648m || 214748.3647m < value) 
@@ -202,6 +219,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <inheritdoc cref="AddSmallMoneyParam(SqlCommand, string, decimal)"/>
 		public static void AddSmallMoneyParam(this SqlCommand cmd, string parameterName, decimal? value )
 		{
 			if (value != null)
@@ -217,6 +235,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>money</c> parameter.</summary>
 		public static void AddMoneyParam(this SqlCommand cmd, string parameterName, decimal value )
 		{
 			if (value < -922337203685477.5808m || 922337203685477.5807m < value) 
@@ -231,6 +250,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <inheritdoc cref="AddMoneyParam(SqlCommand, string, decimal)"/>
 		public static void AddMoneyParam(this SqlCommand cmd, string parameterName, decimal? value )
 		{
 			if (value != null)
@@ -246,6 +266,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>real</c> (single-precision float) parameter.</summary>
 		public static void AddRealParam(this SqlCommand cmd, string parameterName, float value )
 		{
 			if (value < -3.40E+38f || 3.40E+38f < value) 
@@ -260,6 +281,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <inheritdoc cref="AddRealParam(SqlCommand, string, float)"/>
 		public static void AddRealParam(this SqlCommand cmd, string parameterName, float? value )
 		{
 			if (value != null)
@@ -275,6 +297,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>float</c> (double-precision) parameter.</summary>
 		public static void AddFloatParam(this SqlCommand cmd, string parameterName, double value )
 		{
 			if (value < -1.79E+308d || 1.79E+308d < value) 
@@ -289,6 +312,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <inheritdoc cref="AddFloatParam(SqlCommand, string, double)"/>
 		public static void AddFloatParam(this SqlCommand cmd, string parameterName, double? value )
 		{
 			if (value != null)
@@ -304,6 +328,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>char(1)</c> parameter.</summary>
 		public static void AddCharParam(this SqlCommand cmd, string parameterName, char value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -315,6 +340,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <inheritdoc cref="AddCharParam(SqlCommand, string, char)"/>
 		public static void AddCharParam(this SqlCommand cmd, string parameterName, char? value )
 		{
 			if (value != null)
@@ -330,6 +356,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>nchar(1)</c> parameter.</summary>
 		public static void AddNCharParam(this SqlCommand cmd, string parameterName, char value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -341,6 +368,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <inheritdoc cref="AddNCharParam(SqlCommand, string, char)"/>
 		public static void AddNCharParam(this SqlCommand cmd, string parameterName, char? value )
 		{
 			if (value != null)
@@ -356,6 +384,10 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>varchar(<paramref name="size"/>)</c> parameter.</summary>
+		/// <remarks>When <paramref name="trimToNull"/>=<c>true</c>, whitespace-only or empty strings are sent as <c>NULL</c>.
+		/// When <paramref name="truncate"/>=<c>true</c>, strings longer than <paramref name="size"/> are silently
+		/// truncated; otherwise they are sent as-is and SQL Server may raise an error.</remarks>
 		public static void AddVarcharParam(this SqlCommand cmd, string parameterName, int size, string? value, bool trimToNull = false, bool truncate = false)
 		{
 			if (value != null)
@@ -379,6 +411,9 @@ namespace Artisan.Orm
 			});
 		}
 	
+		/// <summary>Adds an input <c>nvarchar(<paramref name="size"/>)</c> parameter.</summary>
+		/// <remarks>When <paramref name="trimToNull"/>=<c>true</c>, whitespace-only or empty strings are sent as <c>NULL</c>.
+		/// When <paramref name="truncate"/>=<c>true</c>, strings longer than <paramref name="size"/> are silently truncated.</remarks>
 		public static void AddNVarcharParam(this SqlCommand cmd, string parameterName, int size, string? value, bool trimToNull = false, bool truncate = false)
 		{
 			if (value != null)
@@ -403,6 +438,8 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>varchar(max)</c> parameter.</summary>
+		/// <remarks>When <paramref name="trimToNull"/>=<c>true</c>, whitespace-only or empty strings are sent as <c>NULL</c>.</remarks>
 		public static void AddVarcharMaxParam(this SqlCommand cmd, string parameterName, string? value, bool trimToNull = false)
 		{
 			if (trimToNull)
@@ -418,6 +455,8 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <summary>Adds an input <c>nvarchar(max)</c> parameter.</summary>
+		/// <remarks>When <paramref name="trimToNull"/>=<c>true</c>, whitespace-only or empty strings are sent as <c>NULL</c>.</remarks>
 		public static void AddNVarcharMaxParam(this SqlCommand cmd, string parameterName, string? value, bool trimToNull = false)
 		{
 			if (trimToNull)
@@ -434,6 +473,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>binary(<paramref name="size"/>)</c> parameter (fixed-length).</summary>
 		public static void AddBinaryParam(this SqlCommand cmd, string parameterName, int size, byte[]? value)
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -446,6 +486,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <summary>Adds an input <c>varbinary(<paramref name="size"/>)</c> parameter (variable-length, capped at <paramref name="size"/>).</summary>
 		public static void AddVarbinaryParam(this SqlCommand cmd, string parameterName, int size, byte[]? value)
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -458,6 +499,7 @@ namespace Artisan.Orm
 			});
 		}
 	
+		/// <summary>Adds an input <c>varbinary(max)</c> parameter — for arbitrary-length blobs.</summary>
 		public static void AddVarbinaryMaxParam(this SqlCommand cmd, string parameterName, byte[]? value)
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -471,6 +513,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>date</c> parameter (time component is dropped on the SQL side).</summary>
 		public static void AddDateParam(this SqlCommand cmd, string parameterName, DateTime value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -482,6 +525,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <inheritdoc cref="AddDateParam(SqlCommand, string, DateTime)"/>
 		public static void AddDateParam(this SqlCommand cmd, string parameterName, DateTime? value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -494,6 +538,7 @@ namespace Artisan.Orm
 		}
 	
 
+		/// <summary>Adds an input <c>time</c> parameter.</summary>
 		public static void AddTimeParam(this SqlCommand cmd, string parameterName, TimeSpan value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -505,6 +550,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <inheritdoc cref="AddTimeParam(SqlCommand, string, TimeSpan)"/>
 		public static void AddTimeParam(this SqlCommand cmd, string parameterName, TimeSpan? value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -517,6 +563,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>smalldatetime</c> parameter (1-minute precision, 1900-2079 range).</summary>
 		public static void AddSmallDateTimeParam(this SqlCommand cmd, string parameterName, DateTime value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -528,6 +575,7 @@ namespace Artisan.Orm
 			});
 		}
 	
+		/// <inheritdoc cref="AddSmallDateTimeParam(SqlCommand, string, DateTime)"/>
 		public static void AddSmallDateTimeParam(this SqlCommand cmd, string parameterName, DateTime? value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -540,6 +588,8 @@ namespace Artisan.Orm
 		}
 	
 
+		/// <summary>Adds an input <c>datetime</c> parameter (~3.33ms precision, 1753-9999 range).
+		/// Prefer <see cref="AddDateTime2Param(SqlCommand, string, DateTime)"/> for new schemas.</summary>
 		public static void AddDateTimeParam(this SqlCommand cmd, string parameterName, DateTime value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -551,6 +601,7 @@ namespace Artisan.Orm
 			});
 		}
 	
+		/// <inheritdoc cref="AddDateTimeParam(SqlCommand, string, DateTime)"/>
 		public static void AddDateTimeParam(this SqlCommand cmd, string parameterName, DateTime? value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -563,6 +614,7 @@ namespace Artisan.Orm
 		}
 	
 
+		/// <summary>Adds an input <c>datetime2(7)</c> parameter (100ns precision, 0001-9999 range).</summary>
 		public static void AddDateTime2Param(this SqlCommand cmd, string parameterName, DateTime value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -574,6 +626,7 @@ namespace Artisan.Orm
 			});
 		}
 	
+		/// <inheritdoc cref="AddDateTime2Param(SqlCommand, string, DateTime)"/>
 		public static void AddDateTime2Param(this SqlCommand cmd, string parameterName, DateTime? value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -586,6 +639,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>datetimeoffset(7)</c> parameter — preserves the time-zone offset.</summary>
 		public static void AddDateTimeOffsetParam(this SqlCommand cmd, string parameterName, DateTimeOffset value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -597,6 +651,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <inheritdoc cref="AddDateTimeOffsetParam(SqlCommand, string, DateTimeOffset)"/>
 		public static void AddDateTimeOffsetParam(this SqlCommand cmd, string parameterName, DateTimeOffset? value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -609,6 +664,7 @@ namespace Artisan.Orm
 		}
 	
 
+		/// <summary>Adds an input <c>uniqueidentifier</c> parameter.</summary>
 		public static void AddGuidParam(this SqlCommand cmd, string parameterName, Guid value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -620,6 +676,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <inheritdoc cref="AddGuidParam(SqlCommand, string, Guid)"/>
 		public static void AddGuidParam(this SqlCommand cmd, string parameterName, Guid? value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -632,6 +689,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an input <c>binary(8)</c> parameter holding a SQL Server <c>rowversion</c>/<c>timestamp</c> value (raw bytes).</summary>
 		public static void AddRowVersionParam(this SqlCommand cmd, string parameterName, byte[] value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -644,6 +702,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <summary>Decodes a base64 string and adds it as a <c>binary(8)</c> rowversion parameter.</summary>
 		public static void AddRowVersionFromBase64StringParam(this SqlCommand cmd, string parameterName, string value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -656,6 +715,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <summary>Encodes the <see cref="long"/> as 8 bytes and adds it as a <c>binary(8)</c> rowversion parameter.</summary>
 		public static void AddRowVersionFromInt64Param(this SqlCommand cmd, string parameterName, long value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -668,6 +728,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <inheritdoc cref="AddRowVersionFromInt64Param(SqlCommand, string, long)"/>
 		public static void AddRowVersionFromInt64Param(this SqlCommand cmd, string parameterName, long? value )
 		{
 			if (value != null)
@@ -684,6 +745,7 @@ namespace Artisan.Orm
 		}
 	
 
+		/// <summary>Adds an input <c>sql_variant</c> parameter — accepts any boxed value of a SQL-compatible type.</summary>
 		public static void AddSqlVariantParam(this SqlCommand cmd, string parameterName, object value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -695,6 +757,7 @@ namespace Artisan.Orm
 			});
 		}
 	
+		/// <summary>Adds an input <c>xml</c> parameter from a serialised XML string.</summary>
 		public static void AddXmlParam(this SqlCommand cmd, string parameterName, string value )
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -707,6 +770,9 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds a structured (table-valued) parameter built from <paramref name="dataTable"/>.
+		/// The <see cref="DataTable.TableName"/> must match the user-defined SQL table type expected by the procedure.
+		/// No-op when <paramref name="dataTable"/> is <c>null</c>.</summary>
 		public static void AddTableParam(this SqlCommand cmd, string parameterName, DataTable? dataTable)
 		{
 			if (dataTable == null)
@@ -724,11 +790,14 @@ namespace Artisan.Orm
 			cmd.Parameters.Add(param);
 		}
 
+		/// <summary>Adds a TVP populated with <paramref name="ids"/> against the canonical
+		/// <c>TinyIntIdTableType</c> (single-column <c>Id tinyint not null</c>).</summary>
 		public static void AddTableParam(this SqlCommand cmd, string parameterName, IEnumerable<byte> ids)
 		{
 			cmd.AddTableParam(parameterName, ids?.ToTinyIntIdDataTable());
 		}
 
+		/// <summary>Adds a TVP populated with <paramref name="ids"/> against the canonical <c>SmallIntIdTableType</c>.</summary>
 		public static void AddTableParam(this SqlCommand cmd, string parameterName, IEnumerable<short> ids)
 		{
 			cmd.AddTableParam(parameterName, ids.ToSmallIntIdDataTable());
@@ -748,21 +817,29 @@ namespace Artisan.Orm
 			cmd.AddTableParam(parameterName, ids?.ToIntIdDataTable());
 		}
 
+		/// <summary>Adds a TVP populated with <paramref name="ids"/> against the canonical <c>BigIntIdTableType</c>.</summary>
 		public static void AddTableParam(this SqlCommand cmd, string parameterName, IEnumerable<long> ids)
 		{
 			cmd.AddTableParam(parameterName, ids?.ToBigIntIdDataTable());
 		}
 
+		/// <summary>Adds a TVP built via the registered mapper for <typeparamref name="T"/>
+		/// (<c>CreateDataTable</c>/<c>CreateDataRow</c>).</summary>
 		public static void AddTableParam<T>(this SqlCommand cmd, string parameterName, IEnumerable<T> list)
 		{
 			cmd.AddTableParam(parameterName, list?.ToDataTable<T>());
 		}
 
+		/// <summary>Adds a TVP via auto-mapping (reflection-based). <paramref name="tableName"/> sets the
+		/// SQL user-defined-table-type name, and <paramref name="columnNames"/> (comma- or semicolon-separated)
+		/// selects which properties of <typeparamref name="T"/> become columns.</summary>
 		public static void AddTableParam<T>(this SqlCommand cmd, string parameterName, IEnumerable<T> list, string tableName, string columnNames)
 		{
 			cmd.AddTableParam(parameterName, list?.AsDataTable(tableName, columnNames));
 		}
 
+		/// <summary>Adds a TVP built via the registered mapper, but overrides its <see cref="DataTable.TableName"/>
+		/// with <paramref name="tableName"/> — useful when the same C# type maps to multiple SQL TVP types.</summary>
 		public static void AddTableParam<T>(this SqlCommand cmd, string parameterName, IEnumerable<T> list, string tableName)
 		{
 			var dataTable = list?.ToDataTable<T>();
@@ -771,23 +848,29 @@ namespace Artisan.Orm
 			cmd.AddTableParam(parameterName, dataTable);
 		}
 
+		/// <summary>Adds a single-row TVP holding <paramref name="id"/> — convenience for procedures that take
+		/// a one-element <c>TinyIntIdTableType</c> instead of a scalar.</summary>
 		public static void AddTableRowParam(this SqlCommand cmd, string parameterName, byte id)
 		{
 			var array = new byte[] { id };
 			cmd.AddTableParam(parameterName, array);
 		}
 
+		/// <inheritdoc cref="AddTableRowParam(SqlCommand, string, byte)"/>
 		public static void AddTableRowParam(this SqlCommand cmd, string parameterName, short id)
 		{
 			var array = new short[] { id };
 			cmd.AddTableParam(parameterName, array);
 		}
 
+		/// <inheritdoc cref="AddTableRowParam(SqlCommand, string, byte)"/>
 		public static void AddTableRowParam(this SqlCommand cmd, string parameterName, int id)
 		{
 			var array = new int[] { id };
 			cmd.AddTableParam(parameterName, array);
 		}
+
+		/// <inheritdoc cref="AddTableRowParam(SqlCommand, string, byte)"/>
 		public static void AddTableRowParam(this SqlCommand cmd, string parameterName, long id)
 		{
 			var array = new long[] { id };
@@ -795,6 +878,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds a single-row TVP from <paramref name="obj"/> using the registered mapper for <typeparamref name="T"/>.</summary>
 		public static void AddTableRowParam<T>(this SqlCommand cmd, string parameterName, T obj)
 		{
 			var array = new T[] { obj };
@@ -802,6 +886,8 @@ namespace Artisan.Orm
 			cmd.AddTableParam(parameterName, array);
 		}
 
+		/// <summary>Adds a single-row TVP via auto-mapping. <typeparamref name="T"/> must not implement <see cref="IEnumerable"/>.</summary>
+		/// <exception cref="ArgumentException">Thrown when <typeparamref name="T"/> implements <see cref="IEnumerable"/>.</exception>
 		public static void AddTableRowParam<T>(this SqlCommand cmd, string parameterName, T obj, string tableName, string columnNames)
 		{
 			if (typeof(IEnumerable).IsAssignableFrom(typeof(T)))
@@ -813,6 +899,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Adds an output <c>bit</c> parameter; read its value via <c>cmd.Parameters[name].Value</c> after execute.</summary>
 		public static void AddBitOutputParam(this SqlCommand cmd, string parameterName)
 		{
 			cmd.Parameters.Add(new SqlParameter
@@ -823,6 +910,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <summary>Adds an output <c>tinyint</c> parameter.</summary>
 		public static void AddTinyIntOutputParam(this SqlCommand cmd, string parameterName)
 		{
 			cmd.Parameters.Add(new SqlParameter
@@ -833,6 +921,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <summary>Adds an output <c>smallint</c> parameter.</summary>
 		public static void AddSmallIntOutputParam(this SqlCommand cmd, string parameterName)
 		{
 			cmd.Parameters.Add(new SqlParameter
@@ -843,6 +932,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <summary>Adds an output <c>int</c> parameter.</summary>
 		public static void AddIntOutputParam(this SqlCommand cmd, string parameterName)
 		{
 			cmd.Parameters.Add(new SqlParameter
@@ -853,6 +943,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <summary>Adds an output <c>bigint</c> parameter.</summary>
 		public static void AddBigIntOutputParam(this SqlCommand cmd, string parameterName)
 		{
 			cmd.Parameters.Add(new SqlParameter
@@ -863,6 +954,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <summary>Adds an output <c>decimal(<paramref name="precision"/>, <paramref name="scale"/>)</c> parameter.</summary>
 		public static void AddDecimalOutputParam(this SqlCommand cmd, string parameterName, byte precision, byte scale)
 		{
 			cmd.Parameters.Add(new SqlParameter
@@ -875,6 +967,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <summary>Adds an output <c>uniqueidentifier</c> parameter.</summary>
 		public static void AddGuidOutputParam(this SqlCommand cmd, string parameterName)
 		{
 			cmd.Parameters.Add(new SqlParameter
@@ -885,6 +978,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <summary>Adds an output <c>datetime2(7)</c> parameter.</summary>
 		public static void AddDateTime2OutputParam(this SqlCommand cmd, string parameterName)
 		{
 			cmd.Parameters.Add(new SqlParameter
@@ -895,6 +989,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <summary>Adds an output <c>datetimeoffset(7)</c> parameter.</summary>
 		public static void AddDateTimeOffsetOutputParam(this SqlCommand cmd, string parameterName)
 		{
 			cmd.Parameters.Add(new SqlParameter
@@ -905,6 +1000,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <summary>Adds an output <c>varchar(<paramref name="size"/>)</c> parameter.</summary>
 		public static void AddVarcharOutputParam(this SqlCommand cmd, string parameterName, int size)
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -916,6 +1012,7 @@ namespace Artisan.Orm
 			});
 		}
 
+		/// <summary>Adds an output <c>nvarchar(<paramref name="size"/>)</c> parameter.</summary>
 		public static void AddNVarcharOutputParam(this SqlCommand cmd, string parameterName, int size)
 		{
 			cmd.Parameters.Add( new SqlParameter
@@ -929,21 +1026,25 @@ namespace Artisan.Orm
 
 #if NET6_0_OR_GREATER
 
+		/// <summary>Adds an input <c>date</c> parameter from a <see cref="DateOnly"/> (NET6+).</summary>
 		public static void AddDateParam(this SqlCommand cmd, string parameterName, DateOnly value)
 		{
 			cmd.AddDateParam(parameterName, value.ToDateTime(TimeOnly.MinValue));
 		}
 
+		/// <inheritdoc cref="AddDateParam(SqlCommand, string, DateOnly)"/>
 		public static void AddDateParam(this SqlCommand cmd, string parameterName, DateOnly? value)
 		{
 			cmd.AddDateParam(parameterName, value.HasValue ? (DateTime?)value.Value.ToDateTime(TimeOnly.MinValue) : null);
 		}
 
+		/// <summary>Adds an input <c>time</c> parameter from a <see cref="TimeOnly"/> (NET6+).</summary>
 		public static void AddTimeParam(this SqlCommand cmd, string parameterName, TimeOnly value)
 		{
 			cmd.AddTimeParam(parameterName, value.ToTimeSpan());
 		}
 
+		/// <inheritdoc cref="AddTimeParam(SqlCommand, string, TimeOnly)"/>
 		public static void AddTimeParam(this SqlCommand cmd, string parameterName, TimeOnly? value)
 		{
 			cmd.AddTimeParam(parameterName, value.HasValue ? (TimeSpan?)value.Value.ToTimeSpan() : null);
@@ -968,6 +1069,8 @@ namespace Artisan.Orm
 #endif
 
 
+		/// <summary>Returns the <c>@ReturnValue</c> parameter, adding it via <see cref="AddReturnValueParam(SqlCommand)"/>
+		/// if not already present. Used internally by <c>Execute*</c> methods to expose the TSQL <c>RETURN</c> value.</summary>
 		public static SqlParameter ReturnValueParam(this SqlCommand cmd)
 		{
 			if (!cmd.Parameters.Contains("@ReturnValue"))
@@ -976,6 +1079,8 @@ namespace Artisan.Orm
 			return cmd.Parameters["@ReturnValue"]!;  // Contains check above guarantees the parameter is present
 		}
 
+		/// <summary>Adds an output <c>@ReturnValue</c> parameter of type <c>int</c>. After execute, its <c>Value</c>
+		/// holds the value supplied by TSQL <c>RETURN N;</c>, or <c>0</c> if no <c>RETURN</c> was hit.</summary>
 		public static void AddReturnValueParam(this SqlCommand cmd)
 		{
 			var returnValueParam = new SqlParameter
@@ -988,11 +1093,17 @@ namespace Artisan.Orm
 			cmd.Parameters.Add(returnValueParam);
 		}
 
+		/// <summary>Returns the <c>@ReturnValue</c> parameter if it was added previously, otherwise <c>null</c>.</summary>
 		public static SqlParameter? GetReturnValueParam(this SqlCommand cmd)
 		{
 			return cmd.Parameters.Contains("@ReturnValue") ? cmd.Parameters["@ReturnValue"] : null;
 		}
 
+		/// <summary>Auto-discovers the procedure's parameter set via <see cref="SqlCommandBuilder.DeriveParameters(SqlCommand)"/>
+		/// (cached after first call), then fills each parameter from <paramref name="paramDictionary"/> by case-insensitive
+		/// name match. Property keys may include or omit the leading <c>@</c>.</summary>
+		/// <remarks>Useful when you don't want to hand-write a sequence of <c>Add*Param</c> calls — pass an anonymous-typed
+		/// dictionary or one built from a model. Trades a small first-call latency for code brevity.</remarks>
 		public static void AddParams(this SqlCommand cmd, Dictionary<string, object> paramDictionary)
 		{
 			var collectionKey = cmd.CommandText;

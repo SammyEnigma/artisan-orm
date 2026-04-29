@@ -36,6 +36,7 @@ namespace Artisan.Orm
 
 		#region [ GetByReaderAsync, ExecuteReaderAsync ]
 
+		/// <inheritdoc cref="GetByReader{T}(SqlCommand, Func{SqlDataReader, T})"/>
 		public static async Task<T> GetByReaderAsync<T>(this SqlCommand cmd,  Func<SqlDataReader, T> func, CancellationToken cancellationToken = default)
 		{
 			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd).ConfigureAwait(false);
@@ -44,6 +45,7 @@ namespace Artisan.Orm
 			return func(dr);
 		}
 
+		/// <inheritdoc cref="GetByReader{T}(SqlCommand, Func{SqlDataReader, SqlParameter, T})"/>
 		public static async Task<T> GetByReaderAsync<T>(this SqlCommand cmd,  Func<SqlDataReader, SqlParameter, T> func, CancellationToken cancellationToken = default)
 		{
 			var returnValueParam = cmd.ReturnValueParam();
@@ -54,6 +56,7 @@ namespace Artisan.Orm
 			return func(dr, returnValueParam);
 		}
 
+		/// <inheritdoc cref="ExecuteReader(SqlCommand, Action{SqlDataReader})"/>
 		public static async Task<int> ExecuteReaderAsync(this SqlCommand cmd, Action<SqlDataReader> action, CancellationToken cancellationToken = default)
 		{
 			var returnValueParam = cmd.ReturnValueParam();
@@ -90,6 +93,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <inheritdoc cref="ReadTo{T}(SqlCommand, Func{SqlDataReader, T})"/>
 		public static async Task<T?> ReadToAsync<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, CancellationToken cancellationToken = default)
 		{
 			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleRow).ConfigureAwait(false);
@@ -98,6 +102,7 @@ namespace Artisan.Orm
 			return dr.Read() ? createFunc(dr) : default;
 		}
 
+		/// <inheritdoc cref="ReadTo{T}(SqlCommand)"/>
 		public static async Task<T?> ReadToAsync<T>(this SqlCommand cmd, CancellationToken cancellationToken = default)
 		{
 			if (typeof(T).IsSimpleType())
@@ -107,6 +112,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <inheritdoc cref="ReadAs{T}(SqlCommand)"/>
 		public static async Task<T?> ReadAsAsync<T>(this SqlCommand cmd, CancellationToken cancellationToken = default)
 		{
 			if (typeof(T).IsSimpleType())
@@ -164,6 +170,7 @@ namespace Artisan.Orm
 		}
 	
 
+		/// <inheritdoc cref="ReadToList{T}(SqlCommand, Func{SqlDataReader, T}, IList{T})"/>
 		public static async Task<IList<T>> ReadToListAsync<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, IList<T>? list, CancellationToken cancellationToken = default)
 		{
 			list ??= new List<T>();
@@ -186,6 +193,7 @@ namespace Artisan.Orm
 			return list;
 		}
 
+		/// <inheritdoc cref="ReadToList{T}(SqlCommand, Func{SqlDataReader, T})"/>
 		public static async Task<IList<T>> ReadToListAsync<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, CancellationToken cancellationToken = default)
 		{
 			if (typeof(T).IsSimpleType())
@@ -194,6 +202,7 @@ namespace Artisan.Orm
 			return await cmd.ReadToListOfObjectsAsync<T>(createFunc, null, cancellationToken).ConfigureAwait(false);
 		}
 
+		/// <inheritdoc cref="ReadToList{T}(SqlCommand, IList{T})"/>
 		public static async Task<IList<T>> ReadToListAsync<T>(this SqlCommand cmd, IList<T>? list, CancellationToken cancellationToken = default)
 		{
 			if (typeof(T).IsSimpleType())
@@ -202,6 +211,7 @@ namespace Artisan.Orm
 			return await cmd.ReadToListOfObjectsAsync<T>(MappingManager.GetCreateObjectFunc<T>(), list, cancellationToken).ConfigureAwait(false);
 		}
 
+		/// <inheritdoc cref="ReadToList{T}(SqlCommand)"/>
 		public static async Task<IList<T>> ReadToListAsync<T>(this SqlCommand cmd, CancellationToken cancellationToken = default)
 		{
 			if (typeof(T).IsSimpleType())
@@ -211,6 +221,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <inheritdoc cref="ReadAsList{T}(SqlCommand, IList{T})"/>
 		public static async Task<IList<T>> ReadAsListAsync<T>(this SqlCommand cmd, IList<T>? list, CancellationToken cancellationToken = default)
 		{
 			if (typeof(T).IsSimpleType())
@@ -226,6 +237,7 @@ namespace Artisan.Orm
 			return list;
 		}
 
+		/// <inheritdoc cref="ReadAsList{T}(SqlCommand)"/>
 		public static async Task<IList<T>> ReadAsListAsync<T>(this SqlCommand cmd, CancellationToken cancellationToken = default)
 		{
 			if (typeof(T).IsSimpleType())
@@ -233,24 +245,28 @@ namespace Artisan.Orm
 
 			return await cmd.ReadAsListAsync<T>(null, cancellationToken).ConfigureAwait(false);
 		}
-	
 
+
+		/// <inheritdoc cref="ReadToArray{T}(SqlCommand, Func{SqlDataReader, T})"/>
 		public static async Task<T[]> ReadToArrayAsync<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, CancellationToken cancellationToken = default)
 		{
 			return (await cmd.ReadToListAsync<T>(createFunc, cancellationToken).ConfigureAwait(false)).ToArray();
 		}
 
+		/// <inheritdoc cref="ReadToArray{T}(SqlCommand)"/>
 		public static async Task<T[]> ReadToArrayAsync<T>(this SqlCommand cmd, CancellationToken cancellationToken = default)
 		{
 			return (await cmd.ReadToListAsync<T>(cancellationToken).ConfigureAwait(false)).ToArray();
 		}
 
+		/// <inheritdoc cref="ReadAsArray{T}(SqlCommand)"/>
 		public static async Task<T[]> ReadAsArrayAsync<T>(this SqlCommand cmd, CancellationToken cancellationToken = default)
 		{
 			return (await cmd.ReadAsListAsync<T>(cancellationToken).ConfigureAwait(false)).ToArray();
 		}
 
 
+		/// <inheritdoc cref="ReadDynamic(SqlCommand)"/>
 		public static async Task<dynamic?> ReadDynamicAsync(this SqlCommand cmd, CancellationToken cancellationToken = default)
 		{
 			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleRow).ConfigureAwait(false);
@@ -259,6 +275,7 @@ namespace Artisan.Orm
 			return await dr.ReadAsync(cancellationToken).ConfigureAwait(false) ? dr.CreateDynamic() : null;
 		}
 
+		/// <inheritdoc cref="ReadDynamicList(SqlCommand, IList{dynamic})"/>
 		public static async Task<IList<dynamic>> ReadDynamicListAsync(this SqlCommand cmd, IList<dynamic>? list, CancellationToken cancellationToken = default)
 		{
 			list ??= new List<dynamic>();
@@ -276,11 +293,13 @@ namespace Artisan.Orm
 			return list;
 		}
 
+		/// <inheritdoc cref="ReadDynamicList(SqlCommand)"/>
 		public static Task<IList<dynamic>> ReadDynamicListAsync(this SqlCommand cmd, CancellationToken cancellationToken = default)
 		{
 			return cmd.ReadDynamicListAsync(null, cancellationToken);
 		}
 
+		/// <inheritdoc cref="ReadDynamicArray(SqlCommand)"/>
 		public static async Task<dynamic[]> ReadDynamicArrayAsync(this SqlCommand cmd, CancellationToken cancellationToken = default)
 		{
 			return (await cmd.ReadDynamicListAsync(null, cancellationToken).ConfigureAwait(false)).ToArray();
@@ -413,6 +432,7 @@ namespace Artisan.Orm
 
 		#region [ ReadToObjectRow(s)Async, ReadAsObjectRow(s)Async ]
 
+		/// <inheritdoc cref="ReadToObjectRow(SqlCommand, Func{SqlDataReader, ObjectRow})"/>
 		public static async Task<ObjectRow?> ReadToObjectRowAsync(this SqlCommand cmd, Func<SqlDataReader, ObjectRow> createFunc, CancellationToken cancellationToken = default)
 		{
 			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleRow).ConfigureAwait(false);
@@ -421,6 +441,7 @@ namespace Artisan.Orm
 			return dr.ReadToObjectRow(createFunc, false);
 		}
 
+		/// <inheritdoc cref="ReadToObjectRow{T}(SqlCommand)"/>
 		public static async Task<ObjectRow?> ReadToObjectRowAsync<T>(this SqlCommand cmd, CancellationToken cancellationToken = default)
 		{
 			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleRow).ConfigureAwait(false);
@@ -430,6 +451,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <inheritdoc cref="ReadToObjectRows(SqlCommand, Func{SqlDataReader, ObjectRow})"/>
 		public static async Task<ObjectRows> ReadToObjectRowsAsync(this SqlCommand cmd, Func<SqlDataReader, ObjectRow> createFunc, CancellationToken cancellationToken = default)
 		{
 			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleResult).ConfigureAwait(false);
@@ -438,6 +460,7 @@ namespace Artisan.Orm
 			return dr.ReadToObjectRows(createFunc, false);
 		}
 
+		/// <inheritdoc cref="ReadAsObjectRows(SqlCommand)"/>
 		public static async Task<ObjectRows> ReadAsObjectRowsAsync(this SqlCommand cmd, CancellationToken cancellationToken = default)
 		{
 			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleResult).ConfigureAwait(false);
@@ -447,6 +470,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <inheritdoc cref="ReadAsObjectRow(SqlCommand)"/>
 		public static async Task<ObjectRow?> ReadAsObjectRowAsync(this SqlCommand cmd, CancellationToken cancellationToken = default)
 		{
 			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleRow).ConfigureAwait(false);
@@ -455,6 +479,7 @@ namespace Artisan.Orm
 			return dr.ReadAsObjectRow();
 		}
 
+		/// <inheritdoc cref="ReadToObjectRows{T}(SqlCommand)"/>
 		public static async Task<ObjectRows> ReadToObjectRowsAsync<T>(this SqlCommand cmd, CancellationToken cancellationToken = default)
 		{
 			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleResult).ConfigureAwait(false);
@@ -468,6 +493,7 @@ namespace Artisan.Orm
 
 		#region [ ReadToDictionaryAsync, ReadAsDictionaryAsync ]
 
+		/// <inheritdoc cref="ReadToDictionary{TKey, TValue}(SqlCommand, Func{SqlDataReader, TValue})"/>
 		public static async Task<IDictionary<TKey, TValue>> ReadToDictionaryAsync<TKey, TValue>(this SqlCommand cmd, Func<SqlDataReader, TValue> createFunc, CancellationToken cancellationToken = default) where TKey : notnull
 		{
 			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleResult).ConfigureAwait(false);
@@ -477,6 +503,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <inheritdoc cref="ReadToDictionary{TKey, TValue}(SqlCommand)"/>
 		public static async Task<IDictionary<TKey, TValue>> ReadToDictionaryAsync<TKey, TValue>(this SqlCommand cmd, CancellationToken cancellationToken = default) where TKey : notnull
 		{
 			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleResult).ConfigureAwait(false);
@@ -485,6 +512,7 @@ namespace Artisan.Orm
 			return dr.ReadToDictionary<TKey, TValue>();
 		}
 
+		/// <inheritdoc cref="ReadAsDictionary{TKey, TValue}(SqlCommand)"/>
 		public static async Task<IDictionary<TKey, TValue>> ReadAsDictionaryAsync<TKey, TValue>(this SqlCommand cmd, CancellationToken cancellationToken = default) where TKey : notnull
 		{
 			var readerFlags = await GetReaderFlagsAndOpenConnectionAsync(cmd, CommandBehavior.SingleResult).ConfigureAwait(false);
@@ -498,41 +526,49 @@ namespace Artisan.Orm
 
 		#region [ ReadToTree, ReadToTreeList ]
 	
+		/// <inheritdoc cref="ReadToTree{T}(SqlCommand, Func{SqlDataReader, T}, IList{T}, bool)"/>
 		public static async Task<T?> ReadToTreeAsync<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, IList<T>? list, bool hierarchicallySorted = false, CancellationToken cancellationToken = default) where T : class, INode<T>
 		{
 			return (await cmd.ReadToListOfObjectsAsync<T>(createFunc, list, cancellationToken).ConfigureAwait(false)).ToTree(hierarchicallySorted);
 		}
 
+		/// <inheritdoc cref="ReadToTree{T}(SqlCommand, Func{SqlDataReader, T}, IList{T}, bool)"/>
 		public static async Task<T?> ReadToTreeAsync<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, bool hierarchicallySorted = false, CancellationToken cancellationToken = default) where T : class, INode<T>
 		{
 			return (await cmd.ReadToListOfObjectsAsync<T>(createFunc, null, cancellationToken).ConfigureAwait(false)).ToTree(hierarchicallySorted);
 		}
 
+		/// <inheritdoc cref="ReadToTree{T}(SqlCommand, IList{T}, bool)"/>
 		public static async Task<T?> ReadToTreeAsync<T>(this SqlCommand cmd, IList<T>? list, bool hierarchicallySorted = false, CancellationToken cancellationToken = default) where T : class, INode<T>
 		{
 			return (await cmd.ReadToListOfObjectsAsync<T>(MappingManager.GetCreateObjectFunc<T>(), list, cancellationToken).ConfigureAwait(false)).ToTree(hierarchicallySorted);
 		}
 
+		/// <inheritdoc cref="ReadToTree{T}(SqlCommand, IList{T}, bool)"/>
 		public static async Task<T?> ReadToTreeAsync<T>(this SqlCommand cmd, bool hierarchicallySorted = false, CancellationToken cancellationToken = default) where T : class, INode<T>
 		{
 			return (await cmd.ReadToListOfObjectsAsync<T>(MappingManager.GetCreateObjectFunc<T>(), null, cancellationToken).ConfigureAwait(false)).ToTree(hierarchicallySorted);
 		}
 
+		/// <inheritdoc cref="ReadToTreeList{T}(SqlCommand, Func{SqlDataReader, T}, IList{T}, bool)"/>
 		public static async Task<IList<T>> ReadToTreeListAsync<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, IList<T>? list, bool hierarchicallySorted = false, CancellationToken cancellationToken = default) where T : class, INode<T>
 		{
 			return (await cmd.ReadToListOfObjectsAsync<T>(createFunc, list, cancellationToken).ConfigureAwait(false)).ToTreeList(hierarchicallySorted);
 		}
 
+		/// <inheritdoc cref="ReadToTreeList{T}(SqlCommand, Func{SqlDataReader, T}, IList{T}, bool)"/>
 		public static async Task<IList<T>> ReadToTreeListAsync<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, bool hierarchicallySorted = false, CancellationToken cancellationToken = default) where T : class, INode<T>
 		{
 			return (await cmd.ReadToListOfObjectsAsync<T>(createFunc, null, cancellationToken).ConfigureAwait(false)).ToTreeList(hierarchicallySorted);
 		}
 
+		/// <inheritdoc cref="ReadToTreeList{T}(SqlCommand, Func{SqlDataReader, T}, IList{T}, bool)"/>
 		public static async Task<IList<T>> ReadToTreeListAsync<T>(this SqlCommand cmd, IList<T>? list, bool hierarchicallySorted = false, CancellationToken cancellationToken = default) where T : class, INode<T>
 		{
 			return (await cmd.ReadToListOfObjectsAsync<T>(MappingManager.GetCreateObjectFunc<T>(), list, cancellationToken).ConfigureAwait(false)).ToTreeList(hierarchicallySorted);
 		}
 
+		/// <inheritdoc cref="ReadToTreeList{T}(SqlCommand, Func{SqlDataReader, T}, IList{T}, bool)"/>
 		public static async Task<IList<T>> ReadToTreeListAsync<T>(this SqlCommand cmd, bool hierarchicallySorted = false, CancellationToken cancellationToken = default) where T : class, INode<T>
 		{
 			return (await cmd.ReadToListOfObjectsAsync<T>(MappingManager.GetCreateObjectFunc<T>(), null, cancellationToken).ConfigureAwait(false)).ToTreeList(hierarchicallySorted);

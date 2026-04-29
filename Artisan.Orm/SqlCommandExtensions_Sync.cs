@@ -34,6 +34,9 @@ namespace Artisan.Orm
 
 		#region [ GetByReader, ExecuteReader ]
 
+		/// <summary>Opens the connection if needed, executes the command, and projects the open
+		/// <see cref="SqlDataReader"/> through <paramref name="func"/>. The reader is disposed on exit;
+		/// the connection is closed automatically if it was opened by this call.</summary>
 		public static T GetByReader<T>(this SqlCommand cmd,  Func<SqlDataReader, T> func)
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd);
@@ -42,6 +45,9 @@ namespace Artisan.Orm
 			return func(dr);
 		}
 
+		/// <summary>Same as <see cref="GetByReader{T}(SqlCommand, Func{SqlDataReader, T})"/>, but also
+		/// surfaces the auto-added <c>@ReturnValue</c> output parameter so callers can read TSQL <c>RETURN</c>
+		/// values alongside the result set.</summary>
 		public static T GetByReader<T>(this SqlCommand cmd,  Func<SqlDataReader, SqlParameter, T> func)
 		{
 			var returnValueParam = cmd.ReturnValueParam();
@@ -52,6 +58,8 @@ namespace Artisan.Orm
 			return func(dr, returnValueParam);
 		}
 
+		/// <summary>Executes the command, lets <paramref name="action"/> walk the open reader,
+		/// and returns the TSQL <c>RETURN</c> value (the auto-added <c>@ReturnValue</c> parameter).</summary>
 		public static int ExecuteReader(this SqlCommand cmd, Action<SqlDataReader> action)
 		{
 			var returnValueParam = cmd.ReturnValueParam();
@@ -87,6 +95,8 @@ namespace Artisan.Orm
 			return default;
 		}
 
+		/// <summary>Reads a single row and projects it through <paramref name="createFunc"/>.
+		/// Returns <c>default</c> when the result set is empty.</summary>
 		public static T? ReadTo<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc)
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleRow);
@@ -95,6 +105,8 @@ namespace Artisan.Orm
 			return dr.Read() ? createFunc(dr) : default;
 		}
 
+		/// <summary>Reads a single row using the registered mapper for <typeparamref name="T"/>
+		/// (or scalar conversion for simple types). Returns <c>default</c> when the result set is empty.</summary>
 		public static T? ReadTo<T>(this SqlCommand cmd)
 		{
 			if (typeof(T).IsSimpleType())
@@ -104,6 +116,11 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Reads a single row using auto-mapping (reflection-based, cached after first call)
+		/// for <typeparamref name="T"/>, or scalar conversion for simple types.
+		/// Returns <c>default</c> when the result set is empty.</summary>
+		/// <remarks>Use <see cref="ReadTo{T}(SqlCommand)"/> when a registered mapper exists for <typeparamref name="T"/>;
+		/// it skips the reflection step.</remarks>
 		public static T? ReadAs<T>(this SqlCommand cmd)
 		{
 			if (typeof(T).IsSimpleType())
@@ -115,6 +132,8 @@ namespace Artisan.Orm
 			return dr.Read() ? dr.CreateObject<T>() : default;
 		}
 
+		/// <summary>Reads a single row into an <see cref="System.Dynamic.ExpandoObject"/>
+		/// whose properties match the result-set columns. Returns <c>null</c> when empty.</summary>
 		public static dynamic? ReadDynamic(this SqlCommand cmd)
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleRow);
@@ -170,6 +189,9 @@ namespace Artisan.Orm
 		}
 	
 
+		/// <summary>Reads all rows of the first result set into <paramref name="list"/> (or a new list if <c>null</c>),
+		/// projecting each row through <paramref name="createFunc"/>. <c>NULL</c> rows for nullable value types
+		/// are added as <c>default</c>.</summary>
 		public static IList<T> ReadToList<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, IList<T>? list)
 		{
 			list ??= new List<T>();
@@ -192,6 +214,7 @@ namespace Artisan.Orm
 			return list;
 		}
 
+		/// <inheritdoc cref="ReadToList{T}(SqlCommand, Func{SqlDataReader, T}, IList{T})"/>
 		public static IList<T> ReadToList<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc)
 		{
 			if (typeof(T).IsSimpleType())
@@ -200,6 +223,8 @@ namespace Artisan.Orm
 			return cmd.ReadToListOfObjects<T>(createFunc, null);
 		}
 
+		/// <summary>Reads all rows of the first result set into <paramref name="list"/> (or a new list if <c>null</c>)
+		/// using the registered mapper for <typeparamref name="T"/> (or scalar conversion for simple types).</summary>
 		public static IList<T> ReadToList<T>(this SqlCommand cmd, IList<T>? list)
 		{
 			if (typeof(T).IsSimpleType())
@@ -208,6 +233,8 @@ namespace Artisan.Orm
 			return cmd.ReadToListOfObjects<T>(MappingManager.GetCreateObjectFunc<T>(), list);
 		}
 
+		/// <summary>Reads all rows of the first result set into a new <see cref="IList{T}"/> using the
+		/// registered mapper for <typeparamref name="T"/> (or scalar conversion for simple types).</summary>
 		public static IList<T> ReadToList<T>(this SqlCommand cmd)
 		{
 			if (typeof(T).IsSimpleType())
@@ -216,6 +243,8 @@ namespace Artisan.Orm
 			return cmd.ReadToListOfObjects<T>(MappingManager.GetCreateObjectFunc<T>(), null);
 		}
 
+		/// <summary>Reads all rows into <paramref name="list"/> (or a new list if <c>null</c>),
+		/// where each row becomes an <see cref="System.Dynamic.ExpandoObject"/>.</summary>
 		public static IList<dynamic> ReadDynamicList(this SqlCommand cmd, IList<dynamic>? list)
 		{
 			list ??= new List<dynamic>();
@@ -235,11 +264,16 @@ namespace Artisan.Orm
 			return list;
 		}
 
-		public static IList<dynamic> ReadDynamicList(this SqlCommand cmd) 
+		/// <inheritdoc cref="ReadDynamicList(SqlCommand, IList{dynamic})"/>
+		public static IList<dynamic> ReadDynamicList(this SqlCommand cmd)
 		{
 			return cmd.ReadDynamicList(null);
 		}
 
+		/// <summary>Reads all rows of the first result set into <paramref name="list"/> (or a new list if <c>null</c>)
+		/// using auto-mapping (reflection-based, cached after first call).</summary>
+		/// <remarks>Use <see cref="ReadToList{T}(SqlCommand, IList{T})"/> when a registered mapper exists for
+		/// <typeparamref name="T"/>; it skips the reflection step.</remarks>
 		public static IList<T> ReadAsList<T>(this SqlCommand cmd, IList<T>? list)
 		{
 			if (typeof(T).IsSimpleType())
@@ -255,6 +289,7 @@ namespace Artisan.Orm
 			return list;
 		}
 
+		/// <inheritdoc cref="ReadAsList{T}(SqlCommand, IList{T})"/>
 		public static IList<T> ReadAsList<T>(this SqlCommand cmd)
 		{
 			if (typeof(T).IsSimpleType())
@@ -262,24 +297,29 @@ namespace Artisan.Orm
 
 			return cmd.ReadAsList<T>(null);
 		}
-	
 
+
+		/// <summary>Reads all rows into a <typeparamref name="T"/>-typed array, projecting through
+		/// <paramref name="createFunc"/>. Convenience wrapper around <see cref="ReadToList{T}(SqlCommand, Func{SqlDataReader, T})"/>.</summary>
 		public static T[] ReadToArray<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc)
 		{
 			return cmd.ReadToList<T>(createFunc).ToArray();
 		}
 
+		/// <summary>Reads all rows into a <typeparamref name="T"/>-typed array using the registered mapper.</summary>
 		public static T[] ReadToArray<T>(this SqlCommand cmd)
 		{
 			return cmd.ReadToList<T>().ToArray();
 		}
 
+		/// <summary>Reads all rows into a <typeparamref name="T"/>-typed array using auto-mapping.</summary>
 		public static T[] ReadAsArray<T>(this SqlCommand cmd)
 		{
 			return cmd.ReadAsList<T>().ToArray();
 		}
 
-		public static IList<dynamic> ReadDynamicArray(this SqlCommand cmd) 
+		/// <summary>Reads all rows into an array of <see cref="System.Dynamic.ExpandoObject"/>.</summary>
+		public static IList<dynamic> ReadDynamicArray(this SqlCommand cmd)
 		{
 			return cmd.ReadDynamicList().ToArray();;
 		}
@@ -288,7 +328,10 @@ namespace Artisan.Orm
 
 
 		#region [ ReadToEnumerable ]
-	
+
+		/// <summary>Streams the first result set as an <see cref="IEnumerable{T}"/> of scalar values
+		/// (one per row, column 0). The underlying reader stays open until enumeration completes
+		/// or the enumerator is disposed.</summary>
 		public static IEnumerable<T> ReadToEnumerableValues<T>(this SqlCommand cmd)
 		{
 			var type = typeof(T);
@@ -346,14 +389,18 @@ namespace Artisan.Orm
 		}
 
 
-		public static IEnumerable<T> ReadToEnumerable<T>(this SqlCommand cmd) 
+		/// <summary>Streams the first result set lazily through the registered mapper for <typeparamref name="T"/>
+		/// (or scalar conversion for simple types). Rows are yielded one at a time — no buffering.
+		/// The reader remains open until enumeration completes or the enumerator is disposed.</summary>
+		public static IEnumerable<T> ReadToEnumerable<T>(this SqlCommand cmd)
 		{
 			if (typeof(T).IsSimpleType())
 				return cmd.ReadToEnumerableValues<T>();
 
 			return cmd.ReadToEnumerableObjects(MappingManager.GetCreateObjectFunc<T>());
 		}
-	
+
+		/// <summary>Streams the first result set lazily, projecting each row through <paramref name="createFunc"/>.</summary>
 		public static IEnumerable<T> ReadToEnumerable<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc)
 		{
 			var isNullableValueType = typeof(T).IsNullableValueType();
@@ -373,7 +420,10 @@ namespace Artisan.Orm
 					yield return createFunc(dr);
 		}
 
-		public static IEnumerable<T> ReadAsEnumerable<T>(this SqlCommand cmd) 
+		/// <summary>Streams the first result set lazily using auto-mapping (reflection-based, cached per
+		/// reader column shape). Use <see cref="ReadToEnumerable{T}(SqlCommand)"/> when a registered mapper
+		/// exists for <typeparamref name="T"/>.</summary>
+		public static IEnumerable<T> ReadAsEnumerable<T>(this SqlCommand cmd)
 		{
 			if (typeof(T).IsSimpleType())
 				return cmd.ReadToEnumerableValues<T>();
@@ -387,6 +437,8 @@ namespace Artisan.Orm
 
 		#region [ ReadToObjectRow(s), ReadAsObjectRow(s) ]
 
+		/// <summary>Reads a single row into an <see cref="ObjectRow"/> via <paramref name="createFunc"/>.
+		/// Returns <c>null</c> when the result set is empty.</summary>
 		public static ObjectRow? ReadToObjectRow(this SqlCommand cmd, Func<SqlDataReader, ObjectRow> createFunc)
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleRow);
@@ -395,6 +447,8 @@ namespace Artisan.Orm
 			return dr.ReadToObjectRow(createFunc, false);
 		}
 
+		/// <summary>Reads a single row into an <see cref="ObjectRow"/> using the registered
+		/// <c>CreateObjectRow</c> mapper for <typeparamref name="T"/>. Returns <c>null</c> when empty.</summary>
 		public static ObjectRow? ReadToObjectRow<T>(this SqlCommand cmd)
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleRow);
@@ -404,6 +458,7 @@ namespace Artisan.Orm
 		}
 
 
+		/// <summary>Reads all rows into an <see cref="ObjectRows"/> collection via <paramref name="createFunc"/>.</summary>
 		public static ObjectRows ReadToObjectRows(this SqlCommand cmd, Func<SqlDataReader, ObjectRow> createFunc)
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleResult);
@@ -412,6 +467,8 @@ namespace Artisan.Orm
 			return dr.ReadToObjectRows(createFunc, false);
 		}
 
+		/// <summary>Reads all rows into an <see cref="ObjectRows"/> collection using the registered
+		/// <c>CreateObjectRow</c> mapper for <typeparamref name="T"/>.</summary>
 		public static ObjectRows ReadToObjectRows<T>(this SqlCommand cmd)
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleResult);
@@ -421,6 +478,8 @@ namespace Artisan.Orm
 		}
 
 	
+		/// <summary>Reads a single row into an <see cref="ObjectRow"/> using auto-mapping by column name.
+		/// Returns <c>null</c> when the result set is empty.</summary>
 		public static ObjectRow? ReadAsObjectRow(this SqlCommand cmd)
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleRow);
@@ -429,6 +488,7 @@ namespace Artisan.Orm
 			return dr.ReadAsObjectRow();
 		}
 	
+		/// <summary>Reads all rows into an <see cref="ObjectRows"/> collection using auto-mapping by column name.</summary>
 		public static ObjectRows ReadAsObjectRows(this SqlCommand cmd)
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleResult);
@@ -442,6 +502,8 @@ namespace Artisan.Orm
 
 		#region [ ReadToDictionary, ReadAsDictionary ]
 
+		/// <summary>Reads the first result set into a dictionary keyed by column 0; values are produced
+		/// by <paramref name="createFunc"/>.</summary>
 		public static IDictionary<TKey, TValue> ReadToDictionary<TKey, TValue>(this SqlCommand cmd, Func<SqlDataReader, TValue> createFunc) where TKey : notnull
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleResult);
@@ -450,6 +512,8 @@ namespace Artisan.Orm
 			return dr.ReadToDictionary<TKey, TValue>(createFunc);
 		}
 
+		/// <summary>Reads the first result set into a dictionary keyed by column 0; values are produced
+		/// by the registered mapper for <typeparamref name="TValue"/>.</summary>
 		public static IDictionary<TKey, TValue> ReadToDictionary<TKey, TValue>(this SqlCommand cmd) where TKey : notnull
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleResult);
@@ -458,6 +522,8 @@ namespace Artisan.Orm
 			return dr.ReadToDictionary<TKey, TValue>();
 		}
 
+		/// <summary>Reads the first result set into a dictionary keyed by column 0; values are produced
+		/// by auto-mapping (reflection-based, cached after first call).</summary>
 		public static IDictionary<TKey, TValue> ReadAsDictionary<TKey, TValue>(this SqlCommand cmd) where TKey : notnull
 		{
 			var readerFlags = GetReaderFlagsAndOpenConnection(cmd, CommandBehavior.SingleResult);
@@ -470,42 +536,58 @@ namespace Artisan.Orm
 
 
 		#region [ ReadToTree, ReadToTreeList ]
-	
+
+		/// <summary>Reads a flat <see cref="INode{T}"/> result set, projects each row through
+		/// <paramref name="createFunc"/> into <paramref name="list"/>, then assembles the rows into a tree
+		/// by linking each node to its parent and returns the root.</summary>
+		/// <remarks>Pass <paramref name="hierarchicallySorted"/>=<c>true</c> when the SQL already returns rows in
+		/// pre-order traversal — that enables a faster single-pass build.</remarks>
 		public static T? ReadToTree<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, IList<T>? list, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToListOfObjects<T>(createFunc, list).ToTree(hierarchicallySorted);
 		}
 
+		/// <inheritdoc cref="ReadToTree{T}(SqlCommand, Func{SqlDataReader, T}, IList{T}, bool)"/>
 		public static T? ReadToTree<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToEnumerableObjects<T>(createFunc).ToTree(hierarchicallySorted);
 		}
 
+		/// <summary>Reads a flat <see cref="INode{T}"/> result set using the registered mapper for
+		/// <typeparamref name="T"/> and assembles a tree, returning the root.</summary>
+		/// <remarks>Pass <paramref name="hierarchicallySorted"/>=<c>true</c> when the SQL already returns rows in
+		/// pre-order traversal — that enables a faster single-pass build.</remarks>
 		public static T? ReadToTree<T>(this SqlCommand cmd, IList<T>? list, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToListOfObjects<T>(MappingManager.GetCreateObjectFunc<T>(), list).ToTree(hierarchicallySorted);
 		}
 
+		/// <inheritdoc cref="ReadToTree{T}(SqlCommand, IList{T}, bool)"/>
 		public static T? ReadToTree<T>(this SqlCommand cmd, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToEnumerableObjects<T>(MappingManager.GetCreateObjectFunc<T>()).ToTree(hierarchicallySorted);
 		}
 
+		/// <summary>Reads a flat <see cref="INode{T}"/> result set, links nodes into a forest, and returns
+		/// the list of root nodes.</summary>
 		public static IList<T> ReadToTreeList<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, IList<T>? list, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToListOfObjects<T>(createFunc, list).ToTreeList(hierarchicallySorted);
 		}
 
+		/// <inheritdoc cref="ReadToTreeList{T}(SqlCommand, Func{SqlDataReader, T}, IList{T}, bool)"/>
 		public static IList<T> ReadToTreeList<T>(this SqlCommand cmd, Func<SqlDataReader, T> createFunc, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToEnumerableObjects<T>(createFunc).ToTreeList(hierarchicallySorted);
 		}
 
+		/// <inheritdoc cref="ReadToTreeList{T}(SqlCommand, Func{SqlDataReader, T}, IList{T}, bool)"/>
 		public static IList<T> ReadToTreeList<T>(this SqlCommand cmd, IList<T>? list, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToListOfObjects<T>(MappingManager.GetCreateObjectFunc<T>(), list).ToTreeList(hierarchicallySorted);
 		}
 
+		/// <inheritdoc cref="ReadToTreeList{T}(SqlCommand, Func{SqlDataReader, T}, IList{T}, bool)"/>
 		public static IList<T> ReadToTreeList<T>(this SqlCommand cmd, bool hierarchicallySorted = false) where T : class, INode<T>
 		{
 			return cmd.ReadToEnumerableObjects<T>(MappingManager.GetCreateObjectFunc<T>()).ToTreeList(hierarchicallySorted);
