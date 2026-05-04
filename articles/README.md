@@ -9,7 +9,7 @@ The articles are licensed under **[CC-BY-SA-4.0](LICENSE)** — share, remix, an
 | # | Article | Original date |
 |---|---|---|
 | 1 | [How to Save an Object Graph in Master-Detail Relationship with One Stored Procedure](01-object-graph-saving.md) | Nov 2016 (revised May 2023) |
-| 2 | Artisan.Orm — How to Reinvent the Wheel | _to be re-published_ |
+| 2 | [Artisan.Orm — How to Reinvent the Wheel](02-artisan-orm.md) | Nov 2016 (revised Jun 2020) |
 | 3 | Artisan Way of Data Reply | _to be re-published_ |
 | 4 | [Combination of Id-ParentId and HierarchyId Approaches to Hierarchical Data](04-hierarchyid-combination.md) | 17 Jul 2017 |
 
