@@ -10,13 +10,17 @@ First there was a desire to save a graph of objects for one access to the databa
 * one request to the application server,
 * one access to the database.
 
-Thus the method of [How to Save Object Graph in Master-Detail Relationship with One Stored Procedure](https://www.codeproject.com/Articles/1153556/How-to-Save-Object-Graph-in-Master-Detail-Relation) was found.
+Thus the method of [How to Save an Object Graph in Master-Detail Relationship with One Stored Procedure](articles/01-object-graph-saving.md) was found.
 
 Then there was a desire of more control over Object-Relational Mapping, better performance and ADO.NET code reduction.
 
-Thus a set of extensions to ADO.NET methods turned into a separate project. Here is a story about [Artisan.ORM or How To Reinvent the Wheel](https://www.codeproject.com/articles/Artisan-Orm-or-How-to-Reinvent-the-Wheel)!
+Thus a set of extensions to ADO.NET methods turned into a separate project. Here is a story about [Artisan.Orm or How To Reinvent the Wheel](articles/02-artisan-orm.md).
 
-Finally the *object graph saving method* required a new approach to transmitting of more details about exceptional cases. [Artisan Way of Data Reply](https://www.codeproject.com/Articles/1181182/Artisan-Way-of-Data-Reply) became such an answer.  
+Finally the *object graph saving method* required a new approach to transmitting more details about exceptional cases. [The Artisan Way of Data Reply](articles/03-data-reply.md) became such an answer.
+
+For hierarchical data — folder trees, organisation charts and the like — the Id-ParentId model can be combined with SQL Server's `hierarchyid` for the best of both worlds. See [Combination of Id-ParentId and HierarchyId Approaches to Hierarchical Data](articles/04-hierarchyid-combination.md).
+
+> Note: the four articles above were originally published on [CodeProject](https://www.codeproject.com/) between 2016 and 2021. CodeProject went read-only in late 2024; the articles have been re-published in [`articles/`](articles/) under [CC-BY-SA-4.0](articles/LICENSE).  
 
 ## What to read for better understanding
 
