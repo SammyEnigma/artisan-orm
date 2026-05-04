@@ -8,7 +8,7 @@ The articles are licensed under **[CC-BY-SA-4.0](LICENSE)** — share, remix, an
 
 | # | Article | Original date |
 |---|---|---|
-| 1 | How to Save Object Graph in Master-Detail Relationship with One Stored Procedure | _to be re-published_ |
+| 1 | [How to Save an Object Graph in Master-Detail Relationship with One Stored Procedure](01-object-graph-saving.md) | Nov 2016 (revised May 2023) |
 | 2 | Artisan.Orm — How to Reinvent the Wheel | _to be re-published_ |
 | 3 | Artisan Way of Data Reply | _to be re-published_ |
 | 4 | [Combination of Id-ParentId and HierarchyId Approaches to Hierarchical Data](04-hierarchyid-combination.md) | 17 Jul 2017 |
@@ -22,7 +22,7 @@ The articles can be read independently, but they were written as a progression:
 3. **Article 3** adds the *DataReply* protocol for delivering structured business-logic outcomes from stored procedures back to the client.
 4. **Article 4** extends the model with `hierarchyid` for cases where the data is itself hierarchical.
 
-If you are new to the project and want a single recommended starting point, [Article 1](#) is the entry point.
+If you are new to the project and want a single recommended starting point, [Article 1](01-object-graph-saving.md) is the entry point.
 
 ## Relationship to the wiki
 
