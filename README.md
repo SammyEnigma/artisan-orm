@@ -1,7 +1,7 @@
 # [![Artisan.Orm Logo](https://raw.githubusercontent.com/lobodava/artisan-orm/master/Logo.png)](http://www.nuget.org/packages/Artisan.ORM) Artisan.ORM
 
-ADO.NET Micro-ORM to SQL Server, implemented as .NET Standard 2.1 (since version 3.5.x) or a .Net Core 6.0 library (since version 3.0.0).
-Use version 2.x.x, which was built with Net Standard 2.0, if you want to utilise this library with the .Net Framework or a previous version of .NET Core.
+ADO.NET Micro-ORM to SQL Server. Multi-targets `.NET Standard 2.1`, `.NET 8` and `.NET 10` (since 4.0.0).
+Use version 3.5.x for `.NET Standard 2.1`-only projects, or version 2.x.x (built against `.NET Standard 2.0`) for `.NET Framework` and earlier `.NET Core`.
 
 ## ADO.NET Micro-ORM to SQL Server.
 
@@ -22,17 +22,34 @@ For hierarchical data — folder trees, organisation charts and the like — the
 
 > Note: the four articles above were originally published on [CodeProject](https://www.codeproject.com/) between 2016 and 2021. CodeProject went read-only in late 2024; the articles have been re-published in [`articles/`](articles/) under [CC-BY-SA-4.0](articles/LICENSE).  
 
+## What's new in 4.0
+
+- **Multi-target**: `netstandard2.1`, `net8.0`, `net10.0`.
+- **`BulkCopy` / `BulkCopyAs`** — high-throughput inserts via `SqlBulkCopy`, fed by `MapperFor` mappers.
+- **`ReadToLists<T1..T6>`** — multiple result sets to N strongly-typed lists in one call.
+- **`ReadToAsyncEnumerable<T>` / `ReadAsAsyncEnumerable<T>`** — `IAsyncEnumerable<T>` streaming.
+- **`MergeJoin`** — in-memory master/detail/sub-detail joining without ORM-level SQL joins.
+- **`RunInTransaction` / `RunInTransactionAsync`** — autocommit-on-return transaction wrappers.
+- **Nullable Reference Types** across the whole public API.
+- **SourceLink + symbols (.snupkg)** — step-into debugging from any IDE.
+
+See [CHANGELOG.md](CHANGELOG.md) for the full list.
+
 ## What to read for better understanding
 
 Full information about Artisan.ORM is available in [documentation Wiki](https://github.com/lobodava/artisan-orm/wiki). 
 
 The most interesting articles from Wiki are:
 
+* [What's New in v4](https://github.com/lobodava/artisan-orm/wiki/Whats-New-in-v4)
 * [The Sample](https://github.com/lobodava/artisan-orm/wiki/The-Sample)
-* [Getting Started](https://github.com/lobodava/artisan-orm/wiki/Getting-started)
+* [Getting Started](https://github.com/lobodava/artisan-orm/wiki/Getting-Started)
 * [Read Methods Understanding](https://github.com/lobodava/artisan-orm/wiki/Read-Methods-Understanding)
 * [Mappers](https://github.com/lobodava/artisan-orm/wiki/Mappers)
 * [cmd.AddTableParam](https://github.com/lobodava/artisan-orm/wiki/cmd.AddTableParam)
+* [BulkCopy](https://github.com/lobodava/artisan-orm/wiki/BulkCopy)
+* [MergeJoin](https://github.com/lobodava/artisan-orm/wiki/MergeJoin)
+* [Streaming with IAsyncEnumerable](https://github.com/lobodava/artisan-orm/wiki/Streaming-Async-Enumerable)
 * [Code Generation](https://github.com/lobodava/artisan-orm/wiki/Code-Generation)
 
 

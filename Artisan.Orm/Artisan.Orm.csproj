@@ -9,7 +9,7 @@
     <NoWarn>$(NoWarn);1591</NoWarn>
 
     <Title>Artisan.ORM</Title>
-    <Version>4.0.0-preview.1</Version>
+    <Version>4.0.0</Version>
     <Authors>Vadim Loboda</Authors>
     <Description>
     ADO.NET Micro-ORM to SQL Server. Multi-targets .NET Standard 2.1, .NET 8 and .NET 10.
@@ -24,14 +24,36 @@
     <PackageIcon>Logo.png</PackageIcon>
     <RepositoryUrl>https://github.com/lobodava/artisan-orm</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
-    <PackageTags>ado.net orm micro-orm sql server mssql</PackageTags>
-    <PackageReleaseNotes>Version 4.0 (preview):
+    <PackageTags>ado.net orm micro-orm sql server mssql bulkcopy iasyncenumerable</PackageTags>
+    <PackageReleaseNotes>Artisan.ORM 4.0.0 — first major version since 3.5.1.
+
+Targeting:
 - Multi-target: netstandard2.1, net8.0, net10.0.
-- Enabled deterministic builds, SourceLink and symbol (snupkg) packages.
-- Generated XML documentation file shipped with the package.
-- Fixed thread-safety of NegativeIdentity generators.</PackageReleaseNotes>
+- Microsoft.Data.SqlClient bumped to 7.0.1.
+
+New APIs:
+- BulkCopy / BulkCopyAs (sync + async) — high-throughput inserts via SqlBulkCopy with MapperFor mappers.
+- ReadToLists / ReadToListsAsync — multiple result sets to N strongly-typed lists in one call (T1..T6).
+- ReadToAsyncEnumerable / ReadAsAsyncEnumerable — IAsyncEnumerable&lt;T&gt; streaming for very large result sets.
+- MergeJoin (rewritten) — in-memory join of master/detail/sub-detail result sets without ORM-level joins.
+- RunInTransaction / RunInTransactionAsync — autocommit-on-return transaction wrappers.
+
+Quality &amp; API surface:
+- Nullable Reference Types enabled across the entire library.
+- Async transaction API: IAsyncDisposable, ConfigureAwait(false), CancellationToken throughout.
+- Thread-safe NegativeIdentity generators (Int16/Int32/Int64).
+- ArtisanMappingException replaces internal NullReferenceException / ApplicationException.
+- AddParam extensions no longer use 'dynamic' (faster, AOT-friendlier).
+- Schema-based mapper cache key — no more reflection on SqlDataReader.Command.
+- MappingManager: safe reflection and lazy initialization.
+
+Packaging:
+- Deterministic builds, SourceLink, symbol (.snupkg) packages.
+- XML documentation file shipped in the package.
+- Re-published the four CodeProject design articles under /articles.
+
+Full notes: https://github.com/lobodava/artisan-orm/blob/master/CHANGELOG.md</PackageReleaseNotes>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <ApplicationIcon>Logo.ico</ApplicationIcon>
     <PackageId>Artisan.ORM</PackageId>
     <Product>Artisan.ORM</Product>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -42,11 +64,8 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <PackageOutputPath>$(OutputPath)</PackageOutputPath>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Content Include="Logo.ico" />
-  </ItemGroup>
 
   <ItemGroup>
     <None Include="..\Logo.png">
